@@ -1,6 +1,6 @@
 {
   "name": "aws-athena-node-client",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "build/index.js",
   "author": "Álvaro de la Vega Olmedilla <alvarodlvo@gmail.com>",
   "license": "MIT",
