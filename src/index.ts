@@ -25,10 +25,23 @@ enum AthenaDataTypeEnum {
     BigInt = 'bigint',
 }
 
+/**
+ * AthenaClient class
+ *
+ * @export
+ * @class AthenaClient
+ */
 export class AthenaClient {
     private readonly client: Athena;
+
     private readonly config: AthenaClientConfig;
 
+    /**
+     * Creates an instance of AthenaClient.
+     *
+     * @param {AthenaClientConfig} config - Config for AWS Athena
+     * @memberof AthenaClient
+     */
     public constructor(config: AthenaClientConfig) {
         this.config = config;
         this.config.awsConfig.apiVersion = '2017-05-18';
@@ -36,6 +49,15 @@ export class AthenaClient {
         this.client = new Athena(this.config.awsConfig);
     }
 
+    /**
+     * Execute query in Athena
+     *
+     * @template T
+     * @param {string} query - query to execute, as string
+     * @param {Object} parameters - parameters for query
+     * @returns {Promise<T[]>} - parsed query results
+     * @memberof AthenaClient
+     */
     public async executeQuery<T>(query: string, parameters: Object): Promise<T[]> {
         query = formatQuery(query, parameters);
 
@@ -59,6 +81,14 @@ export class AthenaClient {
         return await this.getQueryResults(queryExecutionId);
     }
 
+    /**
+     * Starts query execution and gets an ID for the operation
+     *
+     * @private
+     * @param {Athena.Types.StartQueryExecutionInput} requestParams - Athena request params
+     * @returns {Promise<string>} - query execution id
+     * @memberof AthenaClient
+     */
     private async startQueryExecution(requestParams: Athena.Types.StartQueryExecutionInput): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.client.startQueryExecution(requestParams, (err, data) => {
@@ -71,6 +101,15 @@ export class AthenaClient {
         });
     }
 
+    /**
+     * Processes query results and parses them
+     *
+     * @private
+     * @template T
+     * @param {string} queryExecutionId - query execution identifier
+     * @returns {Promise<T[]>} - parsed query result rows
+     * @memberof AthenaClient
+     */
     private getQueryResults<T>(queryExecutionId: string): Promise<T[]> {
         const requestParams: Athena.Types.GetQueryExecutionInput = {
             QueryExecutionId: queryExecutionId,
@@ -78,8 +117,8 @@ export class AthenaClient {
 
         let columns: AthenaColumn[];
 
-        return new Promise<any>(((resolve, reject) => {
-            this.client.getQueryResults(requestParams, ((err, data) => {
+        return new Promise<any>((resolve, reject) => {
+            this.client.getQueryResults(requestParams, (err, data) => {
                 if (err != null) {
                     return reject(err);
                 }
@@ -88,10 +127,20 @@ export class AthenaClient {
                 const results = this.parseRows(data.ResultSet.Rows, columns);
 
                 resolve(results);
-            }));
-        }));
+            });
+        });
     }
 
+    /**
+     * Parses result rows
+     *
+     * @private
+     * @template T
+     * @param {Athena.Row[]} rows - query result rows
+     * @param {AthenaColumn[]} columns - query result columns
+     * @returns {T[]} - parsed result according to needed parser
+     * @memberof AthenaClient
+     */
     private parseRows<T>(rows: Athena.Row[], columns: AthenaColumn[]): T[] {
         const results: T[] = [];
 
@@ -113,6 +162,14 @@ export class AthenaClient {
         return results;
     }
 
+    /**
+     * Set appropriate column parsers according to columns' data type
+     *
+     * @private
+     * @param {*} data - query results
+     * @returns {AthenaColumn[]} - column name and parser type
+     * @memberof AthenaClient
+     */
     private setColumnParsers(data): AthenaColumn[] {
         const columns: AthenaColumn[] = [];
 
@@ -163,13 +220,21 @@ export class AthenaClient {
         return columns;
     }
 
+    /**
+     * Checks the query execution status until the query sends SUCCEEDED signal
+     *
+     * @private
+     * @param {string} queryExecutionId - the query execution identifier
+     * @returns {Promise<void>} - promise that will resolve once the operation has finished
+     * @memberof AthenaClient
+     */
     private async waitUntilSucceedQuery(queryExecutionId: string): Promise<void> {
         const requestParams: Athena.Types.GetQueryExecutionInput = {
             QueryExecutionId: queryExecutionId,
         };
 
         return new Promise<void>((resolve, reject) => {
-            this.client.getQueryExecution(requestParams, (async (err, data) => {
+            this.client.getQueryExecution(requestParams, async (err, data) => {
                 if (err != null) {
                     return reject(err);
                 }
@@ -201,16 +266,29 @@ export class AthenaClient {
 
                         break;
                 }
-            }));
+            });
         });
-
     }
 }
 
+/**
+ * AthenaColumn class
+ *
+ * @class AthenaColumn
+ */
 class AthenaColumn {
     public name: string;
+
     public parse: (value: string) => any;
 
+    /**
+     * Parses string to number
+     *
+     * @static
+     * @param {string} value - string to parse
+     * @returns {number} - parsed number
+     * @memberof AthenaColumn
+     */
     public static parseNumber(value: string): number {
         const result = Number(value);
 
@@ -221,10 +299,26 @@ class AthenaColumn {
         return result;
     }
 
+    /**
+     * Parses string
+     *
+     * @static
+     * @param {string} value - string to parse
+     * @returns {string} - parsed string
+     * @memberof AthenaColumn
+     */
     public static parseString(value: string): string {
         return value;
     }
 
+    /**
+     * Parses boolean-like Athena expression to boolean
+     *
+     * @static
+     * @param {string} value - boolean-like string
+     * @returns {boolean} - parsed string
+     * @memberof AthenaColumn
+     */
     public static parseBoolean(value: string): boolean {
         return (
             value === 'true'
@@ -237,10 +331,26 @@ class AthenaColumn {
         );
     }
 
+    /**
+     * Parses string to date
+     *
+     * @static
+     * @param {string} value - string to parse
+     * @returns {Date} - parsed date
+     * @memberof AthenaColumn
+     */
     public static parseDate(value: string): Date {
         return new Date(value);
     }
 
+    /**
+     * Parses string to array
+     *
+     * @static
+     * @param {string} value - string to parse
+     * @returns {any[]} - parsed array
+     * @memberof AthenaColumn
+     */
     public static parseArray(value: string): any[] {
         return JSON.parse(value);
     }
