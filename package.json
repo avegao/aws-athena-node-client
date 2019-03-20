@@ -5,6 +5,16 @@
   "types": "build/index.d.ts",
   "typings": "build/index.d.ts",
   "author": "Álvaro de la Vega Olmedilla <alvarodlvo@gmail.com>",
+  "keywords": [
+    "aws",
+    "athena-client",
+    "amazon web services",
+    "athena",
+    "query",
+    "typescript",
+    "node",
+    "nodejs"
+  ],
   "license": "MIT",
   "homepage": "https://github.com/avegao/aws-athena-node-client",
   "repository": {
