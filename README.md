@@ -1,6 +1,8 @@
 # AWS Athena Client for NodeJS
 [![Build Status](https://travis-ci.org/avegao/aws-athena-node-client.svg?branch=master)](https://travis-ci.org/avegao/aws-athena-node-client)
-
+[![Maintainability](https://api.codeclimate.com/v1/badges/5eb885bb8f1eaf644813/maintainability)](https://codeclimate.com/github/avegao/aws-athena-node-client/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/5eb885bb8f1eaf644813/test_coverage)](https://codeclimate.com/github/avegao/aws-athena-node-client/test_coverage)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=avegao_aws-athena-node-client&metric=alert_status)](https://sonarcloud.io/dashboard?id=avegao_aws-athena-node-client)
 ## Installation
 
 Using NPM:
