@@ -5,6 +5,9 @@
   "types": "build/index.d.ts",
   "typings": "build/index.d.ts",
   "author": "Álvaro de la Vega Olmedilla <alvarodlvo@gmail.com>",
+  "engines": {
+    "node": ">=8.0"
+  },
   "keywords": [
     "aws",
     "athena-client",
@@ -21,6 +24,7 @@
     "type": "git",
     "url": "git@github.com:avegao/aws-athena-node-client.git"
   },
+  "bugs": "https://github.com/avegao/aws-athena-node-client/issues",
   "devDependencies": {
     "@types/node": "^11.11.4",
     "del": "^4.0.0",
