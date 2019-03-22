@@ -1,0 +1,14 @@
+language: node_js
+node_js:
+  - "6"
+  - "8"
+  - "10"
+  - "11"
+
+before_script:
+  - yarn global add gulp-cli
+
+script: gulp
+
+cache:
+  yarn: true

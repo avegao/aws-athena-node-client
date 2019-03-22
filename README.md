@@ -1,4 +1,5 @@
 # AWS Athena Client for NodeJS
+[![Build Status](https://travis-ci.org/avegao/aws-athena-node-client.svg?branch=master)](https://travis-ci.org/avegao/aws-athena-node-client)
 
 ## Installation
 
