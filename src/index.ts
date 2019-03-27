@@ -247,8 +247,12 @@ export class AthenaClient {
                     case 'QUEUED':
                     case 'RUNNING':
                         setTimeout(async () => {
-                            await this.waitUntilSucceedQuery(queryExecutionId);
-                            resolve();
+                            try {
+                                await this.waitUntilSucceedQuery(queryExecutionId);
+                                resolve();
+                            } catch (e) {
+                                reject(e);
+                            }
                         }, this.config.waitTime * 1000);
 
                         break;
