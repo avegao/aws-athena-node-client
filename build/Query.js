@@ -1,0 +1,14 @@
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+const formatting_1 = require("pg-promise/lib/formatting");
+class Query {
+    constructor(sql, parameters, id) {
+        this.originalSql = sql;
+        this.parameters = parameters;
+        this.id = id;
+        this.sql = formatting_1.formatQuery(sql, parameters);
+    }
+}
+exports.Query = Query;
+
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9RdWVyeS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxZQUFZLENBQUM7O0FBRWIsMERBQXNEO0FBRXRELE1BQWEsS0FBSztJQVFkLFlBQW1CLEdBQVcsRUFBRSxVQUFtQixFQUFFLEVBQVc7UUFDNUQsSUFBSSxDQUFDLFdBQVcsR0FBRyxHQUFHLENBQUM7UUFDdkIsSUFBSSxDQUFDLFVBQVUsR0FBRyxVQUFVLENBQUM7UUFDN0IsSUFBSSxDQUFDLEVBQUUsR0FBRyxFQUFFLENBQUM7UUFDYixJQUFJLENBQUMsR0FBRyxHQUFHLHdCQUFXLENBQUMsR0FBRyxFQUFFLFVBQVUsQ0FBQyxDQUFDO0lBQzVDLENBQUM7Q0FDSjtBQWRELHNCQWNDIiwiZmlsZSI6IlF1ZXJ5LmpzIiwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBzdHJpY3QnO1xuXG5pbXBvcnQge2Zvcm1hdFF1ZXJ5fSBmcm9tICdwZy1wcm9taXNlL2xpYi9mb3JtYXR0aW5nJztcblxuZXhwb3J0IGNsYXNzIFF1ZXJ5IHtcbiAgICBwdWJsaWMgcmVhZG9ubHkgaWQ6IHN0cmluZztcbiAgICBwdWJsaWMgYXRoZW5hSWQ6IHN0cmluZztcbiAgICBwdWJsaWMgcmVhZG9ubHkgb3JpZ2luYWxTcWw6IHN0cmluZztcbiAgICBwdWJsaWMgcmVhZG9ubHkgcGFyYW1ldGVyczogT2JqZWN0O1xuICAgIHB1YmxpYyBzdGF0dXM6IHN0cmluZztcbiAgICBwdWJsaWMgc3FsOiBzdHJpbmc7XG5cbiAgICBwdWJsaWMgY29uc3RydWN0b3Ioc3FsOiBzdHJpbmcsIHBhcmFtZXRlcnM/OiBPYmplY3QsIGlkPzogc3RyaW5nKSB7XG4gICAgICAgIHRoaXMub3JpZ2luYWxTcWwgPSBzcWw7XG4gICAgICAgIHRoaXMucGFyYW1ldGVycyA9IHBhcmFtZXRlcnM7XG4gICAgICAgIHRoaXMuaWQgPSBpZDtcbiAgICAgICAgdGhpcy5zcWwgPSBmb3JtYXRRdWVyeShzcWwsIHBhcmFtZXRlcnMpO1xuICAgIH1cbn1cbiJdfQ==

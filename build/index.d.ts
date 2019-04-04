@@ -2,8 +2,10 @@ import { AthenaClientConfig } from './AthenaClientConfig';
 export declare class AthenaClient {
     private readonly client;
     private readonly config;
+    private queue;
     constructor(config: AthenaClientConfig);
-    executeQuery<T>(query: string, parameters: Object): Promise<T[]>;
+    executeQuery<T>(sql: string, parameters?: Object, id?: string): Promise<T[]>;
+    cancelQuery(id: string): Promise<void>;
     private startQueryExecution;
     private getQueryResults;
     private parseRows;
