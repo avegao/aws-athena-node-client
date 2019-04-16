@@ -1,6 +1,6 @@
 {
   "name": "aws-athena-node-client",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "typings": "build/index.d.ts",
