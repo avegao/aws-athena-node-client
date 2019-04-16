@@ -50,7 +50,6 @@ export class AthenaClient {
         this.config.awsConfig.apiVersion = '2017-05-18';
 
         this.client = new Athena(this.config.awsConfig);
-
         this.queue = new Queue();
     }
 
@@ -82,7 +81,7 @@ export class AthenaClient {
             throw exception;
         }
 
-        return await this.getQueryResults(query);
+        return await this.getQueryResults(query.athenaId);
     }
 
     /**
@@ -150,25 +149,41 @@ export class AthenaClient {
      *
      * @private
      * @template T
-     * @param {Query} query - query execution identifier
+     *
+     * @param {string} queryExecutionId - query execution identifier
+     * @param {string} nextToken
+     * @param {T[]} previousResults
+     *
      * @returns {Promise<T[]>} - parsed query result rows
      * @memberof AthenaClient
      */
-    private getQueryResults<T>(query: Query): Promise<T[]> {
-        const requestParams: Athena.Types.GetQueryExecutionInput = {
-            QueryExecutionId: query.athenaId,
+    private getQueryResults<T>(queryExecutionId: string, nextToken?: string, previousResults?: T[]): Promise<T[]> {
+        const requestParams: Athena.Types.GetQueryResultsInput = {
+            NextToken: nextToken,
+            QueryExecutionId: queryExecutionId,
         };
 
         let columns: AthenaColumn[];
 
         return new Promise<any>((resolve, reject) => {
-            this.client.getQueryResults(requestParams, (err, data) => {
+            this.client.getQueryResults(requestParams, async (err, data) => {
                 if (err != null) {
                     return reject(err);
                 }
 
                 columns = this.setColumnParsers(data);
-                const results = this.parseRows(data.ResultSet.Rows, columns);
+
+                const isFirstPage = (previousResults == null && nextToken == null);
+
+                let results = this.parseRows<T>(data.ResultSet.Rows, columns, isFirstPage);
+
+                if (previousResults != null) {
+                    results = previousResults.concat(results);
+                }
+
+                if (data.NextToken != null) {
+                    results = await this.getQueryResults<T>(queryExecutionId, data.NextToken, results);
+                }
 
                 resolve(results);
             });
@@ -182,14 +197,15 @@ export class AthenaClient {
      * @template T
      * @param {Athena.Row[]} rows - query result rows
      * @param {AthenaColumn[]} columns - query result columns
+     * @param {boolean} isFirstPage
      * @returns {T[]} - parsed result according to needed parser
      * @memberof AthenaClient
      */
-    private parseRows<T>(rows: Athena.Row[], columns: AthenaColumn[]): T[] {
+    private parseRows<T>(rows: Athena.Row[], columns: AthenaColumn[], isFirstPage = false): T[] {
         const results: T[] = [];
 
-        // Start by 1 because first line is column title
-        for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+        // Start with 1 when first line is column title (in first page)
+        for (let rowIndex = (isFirstPage) ? 1 : 0; rowIndex < rows.length; rowIndex++) {
             const row = rows[rowIndex];
             const result: T = <T>{};
 
