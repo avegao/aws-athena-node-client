@@ -8,6 +8,9 @@
   "engines": {
     "node": ">=8.0"
   },
+  "scripts": {
+    "test": "mocha --require ts-node/register --exit test/**/*.ts"
+  },
   "keywords": [
     "aws",
     "athena-client",
@@ -26,12 +29,19 @@
   },
   "bugs": "https://github.com/avegao/aws-athena-node-client/issues",
   "devDependencies": {
+    "@types/chai": "^4.1.7",
+    "@types/istanbul": "^0.4.30",
+    "@types/mocha": "^5.2.6",
     "@types/node": "^11.11.4",
+    "chai": "^4.2.0",
     "del": "^4.0.0",
     "gulp": "^4.0.0",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-tslint": "^8.1.4",
     "gulp-typescript": "^5.0.1",
+    "mocha": "^6.0.2",
+    "nyc": "^13.3.0",
+    "ts-node": "^8.0.3",
     "tslint": "^5.14.0",
     "typescript": "^3.3.4000"
   },
