@@ -1,8 +1,11 @@
 'use strict';
 
 import {Athena} from 'aws-sdk';
-import {formatQuery} from 'pg-promise/lib/formatting';
 import {AthenaClientConfig} from './AthenaClientConfig';
+import {Queue} from './Queue';
+import {Query} from './Query';
+import {AthenaClientException} from './exception/AthenaClientException';
+import {QueryCanceledException} from './exception/QueryCanceledException';
 
 enum AthenaDataTypeEnum {
     Integer = 'integer',
@@ -36,6 +39,8 @@ export class AthenaClient {
 
     private readonly config: AthenaClientConfig;
 
+    private queue: Queue;
+
     /**
      * Creates an instance of AthenaClient.
      *
@@ -47,25 +52,80 @@ export class AthenaClient {
         this.config.awsConfig.apiVersion = '2017-05-18';
 
         this.client = new Athena(this.config.awsConfig);
+        this.queue = new Queue();
     }
 
     /**
      * Execute query in Athena
      *
      * @template T
-     * @param {string} query - query to execute, as string
+     *
+     * @param {string} sql - query to execute, as string
      * @param {Object} parameters - parameters for query
+     * @param {string} id - Your custom ID
+     *
      * @returns {Promise<T[]>} - parsed query results
+     *
      * @memberof AthenaClient
      */
-    public async executeQuery<T>(query: string, parameters: Object): Promise<T[]> {
-        query = formatQuery(query, parameters);
+    public async executeQuery<T>(sql: string, parameters?: Object, id?: string): Promise<T[]> {
+        const query = new Query(sql, parameters, id);
 
+        this.queue.addQuery(query);
+
+        query.athenaId = await this.startQueryExecution(query);
+
+        try {
+            await this.waitUntilSucceedQuery(query);
+        } catch (exception) {
+            this.queue.removeQuery(query);
+
+            throw exception;
+        }
+
+        return await this.getQueryResults(query.athenaId);
+    }
+
+    /**
+     * Cancel a AWS Athena query
+     *
+     * @param {string} id Your custom ID
+     *
+     * @returns {Promise<void>}
+     *
+     * @memberof AthenaClient
+     */
+    public async cancelQuery(id: string): Promise<void> {
+        const query = this.queue.getQueryById(id);
+        const requestParams: Athena.Types.StopQueryExecutionInput = {
+            QueryExecutionId: query.athenaId,
+        };
+
+        return new Promise<void>((resolve, reject) => {
+            this.client.stopQueryExecution(requestParams, (err, data) => {
+                if (err != null) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    }
+
+    /**
+     * Starts query execution and gets an ID for the operation
+     *
+     * @private
+     * @param {Query} query - Athena request params
+     * @returns {Promise<string>} - query execution id
+     * @memberof AthenaClient
+     */
+    private async startQueryExecution(query: Query): Promise<string> {
         const requestParams: Athena.Types.StartQueryExecutionInput = {
             QueryExecutionContext: {
                 Database: this.config.database,
             },
-            QueryString: query,
+            QueryString: query.sql,
             ResultConfiguration: {
                 OutputLocation: this.config.bucketUri,
             },
@@ -75,21 +135,6 @@ export class AthenaClient {
             requestParams.WorkGroup = this.config.workGroup;
         }
 
-        const queryExecutionId = await this.startQueryExecution(requestParams);
-        await this.waitUntilSucceedQuery(queryExecutionId);
-
-        return await this.getQueryResults(queryExecutionId);
-    }
-
-    /**
-     * Starts query execution and gets an ID for the operation
-     *
-     * @private
-     * @param {Athena.Types.StartQueryExecutionInput} requestParams - Athena request params
-     * @returns {Promise<string>} - query execution id
-     * @memberof AthenaClient
-     */
-    private async startQueryExecution(requestParams: Athena.Types.StartQueryExecutionInput): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             this.client.startQueryExecution(requestParams, (err, data) => {
                 if (err != null) {
@@ -106,8 +151,11 @@ export class AthenaClient {
      *
      * @private
      * @template T
+     *
      * @param {string} queryExecutionId - query execution identifier
      * @param {string} nextToken
+     * @param {T[]} previousResults
+     *
      * @returns {Promise<T[]>} - parsed query result rows
      * @memberof AthenaClient
      */
@@ -151,6 +199,7 @@ export class AthenaClient {
      * @template T
      * @param {Athena.Row[]} rows - query result rows
      * @param {AthenaColumn[]} columns - query result columns
+     * @param {boolean} isFirstPage
      * @returns {T[]} - parsed result according to needed parser
      * @memberof AthenaClient
      */
@@ -237,13 +286,13 @@ export class AthenaClient {
      * Checks the query execution status until the query sends SUCCEEDED signal
      *
      * @private
-     * @param {string} queryExecutionId - the query execution identifier
+     * @param {Query} query - the query
      * @returns {Promise<void>} - promise that will resolve once the operation has finished
      * @memberof AthenaClient
      */
-    private async waitUntilSucceedQuery(queryExecutionId: string): Promise<void> {
+    private async waitUntilSucceedQuery(query: Query): Promise<void> {
         const requestParams: Athena.Types.GetQueryExecutionInput = {
-            QueryExecutionId: queryExecutionId,
+            QueryExecutionId: query.athenaId,
         };
 
         return new Promise<void>((resolve, reject) => {
@@ -252,7 +301,9 @@ export class AthenaClient {
                     return reject(err);
                 }
 
-                switch (data.QueryExecution.Status.State) {
+                query.status = data.QueryExecution.Status.State;
+
+                switch (query.status) {
                     case 'SUCCEEDED':
                         resolve();
 
@@ -261,7 +312,7 @@ export class AthenaClient {
                     case 'RUNNING':
                         setTimeout(async () => {
                             try {
-                                await this.waitUntilSucceedQuery(queryExecutionId);
+                                await this.waitUntilSucceedQuery(query);
                                 resolve();
                             } catch (e) {
                                 reject(e);
@@ -271,15 +322,15 @@ export class AthenaClient {
                         break;
 
                     case 'CANCELLED':
-                        reject(new Error(`Query cancelled`));
+                        reject(new QueryCanceledException());
 
                         break;
                     case 'FAILED':
-                        reject(new Error(`Query failed`));
+                        reject(new AthenaClientException('Query failed'));
 
                         break;
                     default:
-                        reject(new Error(`Query Status '${data.QueryExecution.Status.State}' not supported`));
+                        reject(new AthenaClientException(`Query Status '${data.QueryExecution.Status.State}' not supported`));
 
                         break;
                 }
