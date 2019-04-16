@@ -3,7 +3,7 @@
 import {Query} from './Query';
 
 export class Queue {
-    public queries: Query[];
+    public queries: Query[] = [];
 
     public addQuery(query: Query): void {
         this.queries.push(query);

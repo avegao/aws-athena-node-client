@@ -4,6 +4,8 @@ import {Athena} from 'aws-sdk';
 import {AthenaClientConfig} from './AthenaClientConfig';
 import {Queue} from './Queue';
 import {Query} from './Query';
+import {AthenaClientException} from './exception/AthenaClientException';
+import {QueryCanceledException} from './exception/QueryCanceledException';
 
 enum AthenaDataTypeEnum {
     Integer = 'integer',
@@ -320,15 +322,15 @@ export class AthenaClient {
                         break;
 
                     case 'CANCELLED':
-                        reject(new Error(`Query cancelled`));
+                        reject(new QueryCanceledException());
 
                         break;
                     case 'FAILED':
-                        reject(new Error(`Query failed`));
+                        reject(new AthenaClientException('Query failed'));
 
                         break;
                     default:
-                        reject(new Error(`Query Status '${data.QueryExecution.Status.State}' not supported`));
+                        reject(new AthenaClientException(`Query Status '${data.QueryExecution.Status.State}' not supported`));
 
                         break;
                 }
