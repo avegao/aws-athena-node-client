@@ -1,0 +1,12 @@
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+const AthenaClientException_1 = require("./AthenaClientException");
+class QueryCanceledException extends AthenaClientException_1.AthenaClientException {
+    constructor() {
+        super('Query cancelled');
+        this.name = 'AthenaQueryCancelled';
+    }
+}
+exports.QueryCanceledException = QueryCanceledException;
+
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9leGNlcHRpb24vUXVlcnlDYW5jZWxlZEV4Y2VwdGlvbi50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQSxZQUFZLENBQUM7O0FBRWIsbUVBQThEO0FBRTlELE1BQWEsc0JBQXVCLFNBQVEsNkNBQXFCO0lBQzdEO1FBQ0ksS0FBSyxDQUFDLGlCQUFpQixDQUFDLENBQUM7UUFFekIsSUFBSSxDQUFDLElBQUksR0FBRyxzQkFBc0IsQ0FBQztJQUN2QyxDQUFDO0NBQ0o7QUFORCx3REFNQyIsImZpbGUiOiJleGNlcHRpb24vUXVlcnlDYW5jZWxlZEV4Y2VwdGlvbi5qcyIsInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxuaW1wb3J0IHtBdGhlbmFDbGllbnRFeGNlcHRpb259IGZyb20gJy4vQXRoZW5hQ2xpZW50RXhjZXB0aW9uJztcblxuZXhwb3J0IGNsYXNzIFF1ZXJ5Q2FuY2VsZWRFeGNlcHRpb24gZXh0ZW5kcyBBdGhlbmFDbGllbnRFeGNlcHRpb24ge1xuICAgIHB1YmxpYyBjb25zdHJ1Y3RvcigpIHtcbiAgICAgICAgc3VwZXIoJ1F1ZXJ5IGNhbmNlbGxlZCcpO1xuXG4gICAgICAgIHRoaXMubmFtZSA9ICdBdGhlbmFRdWVyeUNhbmNlbGxlZCc7XG4gICAgfVxufVxuIl19

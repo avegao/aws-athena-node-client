@@ -1,6 +1,6 @@
 {
   "name": "aws-athena-node-client",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "typings": "build/index.d.ts",
@@ -9,7 +9,8 @@
     "node": ">=8.0"
   },
   "scripts": {
-    "test": "mocha --require ts-node/register --exit test/**/*.ts"
+    "test": "mocha --require ts-node/register --exit test/**/*.ts",
+    "prepublish": "gulp default"
   },
   "keywords": [
     "aws",

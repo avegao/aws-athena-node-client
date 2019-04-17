@@ -89,8 +89,8 @@ try {
     console.log(results);
 } catch (error) {
     if (!(error instanceof QueryCanceledException)) {
-            console.error(error);
-          }
+        console.error(error);
+    }
 }
 ```
 
