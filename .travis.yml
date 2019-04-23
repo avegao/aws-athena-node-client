@@ -8,6 +8,12 @@ node_js:
 before_script:
   - yarn global add gulp-cli
 
+addons:
+  sonarcloud:
+    organization: "avegao-github"
+    token:
+      secure: $SONAR_TOKEN
+
 script: gulp
 
 cache:
