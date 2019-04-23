@@ -69,21 +69,27 @@ export class AthenaClient {
      * @memberof AthenaClient
      */
     public async executeQuery<T>(sql: string, parameters?: Object, id?: string): Promise<T[]> {
-        const query = new Query(sql, parameters, id);
-
-        this.queue.addQuery(query);
-
-        query.athenaId = await this.startQueryExecution(query);
-
-        try {
-            await this.waitUntilSucceedQuery(query);
-        } catch (exception) {
-            this.queue.removeQuery(query);
-
-            throw exception;
-        }
+        const query = await this.executeQueryCommon(sql, parameters, id);
 
         return await this.getQueryResults(query.athenaId);
+    }
+
+    /**
+     * Execute query in Athena and get S3 URL with CSV file
+     *
+     * @param {string} sql - query to execute, as string
+     * @param {Object} parameters - parameters for query
+     * @param {string} id - Your custom ID
+     *
+     * @returns {Promise<string>} - S3 URL
+     *
+     * @memberof AthenaClient
+     */
+    public async executeQueryAndGetS3Url(sql: string, parameters?: Object, id?: string): Promise<string> {
+        const query = await this.executeQueryCommon(sql, parameters, id);
+        const s3BucketUri = await this.getOutputS3Bucket();
+
+        return `${s3BucketUri}${query.athenaId}.csv`;
     }
 
     /**
@@ -110,6 +116,70 @@ export class AthenaClient {
                 }
             });
         });
+    }
+
+    /**
+     * Get WorkGroup details
+     *
+     * @returns {Promise<Athena.WorkGroup>} AWS WorkGroup Object
+     */
+    public async getWorkGroupDetails(): Promise<Athena.WorkGroup> {
+        if (this.config.workGroup == null || this.config.workGroup === '') {
+            throw new Error('You must define an AWS Athena WorkGroup');
+        }
+
+        const parameters: Athena.GetWorkGroupInput = {
+            WorkGroup: this.config.workGroup,
+        };
+
+        return new Promise<Athena.WorkGroup>((resolve: Function, reject: Function) => {
+            this.client.getWorkGroup(parameters, ((err: Error, data: Athena.GetWorkGroupOutput) => {
+                if (err != null) {
+                    return reject(err);
+                }
+
+                return resolve(data.WorkGroup);
+            }));
+        });
+    }
+
+    /**
+     * Get output S3 bucket from bucketUri config parameter or from WorkGroup
+     *
+     * @returns {Promise<string>} S3 Bucket URI
+     */
+    public async getOutputS3Bucket(): Promise<string> {
+        let bucket: string;
+
+        if (this.config.bucketUri != null && this.config.bucketUri !== '') {
+            bucket = this.config.bucketUri;
+        } else if (this.config.workGroup != null || this.config.workGroup !== '') {
+            const workGroup = await this.getWorkGroupDetails();
+
+            bucket = workGroup.Configuration.ResultConfiguration.OutputLocation;
+        } else {
+            throw new Error('You must define a S3 Bucket URI and/or a WorkGroup');
+        }
+
+        return bucket;
+    }
+
+    private async executeQueryCommon(sql: string, parameters?: Object, id?: string): Promise<Query> {
+        const query = new Query(sql, parameters, id);
+
+        this.queue.addQuery(query);
+
+        query.athenaId = await this.startQueryExecution(query);
+
+        try {
+            await this.waitUntilSucceedQuery(query);
+        } catch (exception) {
+            this.queue.removeQuery(query);
+
+            throw exception;
+        }
+
+        return query;
     }
 
     /**

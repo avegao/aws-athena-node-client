@@ -1,5 +1,5 @@
 export declare class Query {
-    readonly id: string;
+    id: string;
     athenaId: string;
     readonly originalSql: string;
     readonly parameters: Object;

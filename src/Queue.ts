@@ -6,6 +6,10 @@ export class Queue {
     public queries: Query[] = [];
 
     public addQuery(query: Query): void {
+        if (query.id == null || query.id === '') {
+            query.id = query.athenaId;
+        }
+
         this.queries.push(query);
     }
 

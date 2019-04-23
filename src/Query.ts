@@ -3,7 +3,7 @@
 import {formatQuery} from 'pg-promise/lib/formatting';
 
 export class Query {
-    public readonly id: string;
+    public id: string;
     public athenaId: string;
     public readonly originalSql: string;
     public readonly parameters: Object;
