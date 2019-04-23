@@ -14,7 +14,9 @@ addons:
     token:
       secure: $SONAR_TOKEN
 
-script: gulp
+script:
+  - sonar-scanner
+  - gulp
 
 cache:
   yarn: true
