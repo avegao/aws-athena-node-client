@@ -63,6 +63,33 @@ try {
 }
 ```
 
+#### Run query and get S3 URL with results
+
+```js
+const query = `SELECT 1`;
+
+athenaClient.executeQueryAndGetS3Url(query)
+    .then((s3Url) => {
+      console.log(s3Url); // Print s3://S3_BUCKET_NAME/QUERY_ID.csv
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+```
+
+Typescript
+
+```typescript
+const query = `SELECT 1`;
+
+try {
+    const results = await athenaClient.executeQueryAndGetS3Url(query);
+    console.log(results);  // Print s3://S3_BUCKET_NAME/QUERY_ID.csv
+} catch (error) {
+    console.error(error);
+}
+```
+
 ### Cancel query
 
 ```js
