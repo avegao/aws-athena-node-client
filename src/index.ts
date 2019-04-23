@@ -285,7 +285,11 @@ export class AthenaClient {
                 const rowData = row.Data[rowDataIndex];
                 const column = columns[rowDataIndex];
 
-                result[column.name] = column.parse(rowData.VarCharValue);
+                if (rowData != null && rowData.VarCharValue != null) {
+                    result[column.name] = column.parse(rowData.VarCharValue);
+                } else {
+                    result[column.name] = null;
+                }
             }
 
             results.push(result);
