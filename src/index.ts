@@ -340,8 +340,10 @@ export class AthenaClient {
                     break;
 
                 case AthenaDataTypeEnum.Array:
-                case AthenaDataTypeEnum.Json:
                     column.parse = AthenaColumn.parseArray;
+                    break;
+                case AthenaDataTypeEnum.Json:
+                    column.parse = AthenaColumn.parseJson;
                     break;
                 case AthenaDataTypeEnum.Binary:
                 case AthenaDataTypeEnum.Map:
@@ -489,11 +491,37 @@ class AthenaColumn {
      * Parses string to array
      *
      * @static
+     * @param {string} arrayInString - string to parse
+     * @returns {any[]} - parsed array
+     * @memberof AthenaColumn
+     */
+    public static parseArray(arrayInString: string): number[] | string[] {
+        arrayInString = arrayInString.replace(/\[|\]/gi, '');
+        const values = arrayInString.split(', ');
+        const result: number[] | string[] = [];
+
+        for (const value of values) {
+            let numberValue = Number(value);
+
+            if (!Number.isNaN(numberValue)) {
+                result.push(<any>numberValue);
+            } else {
+                result.push(<any>value);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Parses string to array
+     *
+     * @static
      * @param {string} value - string to parse
      * @returns {any[]} - parsed array
      * @memberof AthenaColumn
      */
-    public static parseArray(value: string): any[] {
+    public static parseJson(value: string): any[] {
         return JSON.parse(value);
     }
 }
