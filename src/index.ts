@@ -498,15 +498,15 @@ class AthenaColumn {
     public static parseArray(arrayInString: string): number[] | string[] {
         arrayInString = arrayInString.replace(/\[|\]/gi, '');
         const values = arrayInString.split(', ');
-        const result: number[] | string[] = [];
+        const result = [];
 
         for (const value of values) {
             let numberValue = Number(value);
 
             if (!Number.isNaN(numberValue)) {
-                result.push(<any>numberValue);
+                result.push(numberValue);
             } else {
-                result.push(<any>value);
+                result.push(value);
             }
         }
 
