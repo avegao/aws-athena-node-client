@@ -497,6 +497,11 @@ class AthenaColumn {
      */
     public static parseArray(arrayInString: string): number[] | string[] {
         arrayInString = arrayInString.replace(/\[|\]/gi, '');
+
+        if (arrayInString == null || arrayInString === '') {
+            return [];
+        }
+
         const values = arrayInString.split(', ');
         const result = [];
 
