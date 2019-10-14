@@ -81,7 +81,7 @@ export declare class AthenaClient {
      * @private
      * @template T
      *
-     * @param {string} queryExecutionId - query execution identifier
+     * @param {Query<T>} query
      * @param {string} nextToken
      * @param {T[]} previousResults
      *
