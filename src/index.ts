@@ -1,11 +1,10 @@
-'use strict';
-
 import {Athena} from 'aws-sdk';
 import {AthenaClientConfig} from './AthenaClientConfig';
 import {Queue} from './Queue';
 import {Query} from './Query';
 import {AthenaClientException} from './exception/AthenaClientException';
 import {QueryCanceledException} from './exception/QueryCanceledException';
+import {Column} from './Column';
 
 enum AthenaDataTypeEnum {
     Integer = 'integer',
@@ -36,7 +35,6 @@ enum AthenaDataTypeEnum {
  */
 export class AthenaClient {
     private readonly client: Athena;
-
     private readonly config: AthenaClientConfig;
 
     private queue: Queue;
@@ -71,7 +69,7 @@ export class AthenaClient {
     public async executeQuery<T>(sql: string, parameters?: Object, id?: string): Promise<T[]> {
         const query = await this.executeQueryCommon(sql, parameters, id);
 
-        return await this.getQueryResults(query.athenaId);
+        return await this.getQueryResults(query);
     }
 
     /**
@@ -166,7 +164,6 @@ export class AthenaClient {
 
     private async executeQueryCommon(sql: string, parameters?: Object, id?: string): Promise<Query> {
         const query = new Query(sql, parameters, id);
-        query.waitTime = this.config.waitTime;
 
         this.queue.addQuery(query);
 
@@ -230,35 +227,31 @@ export class AthenaClient {
      * @returns {Promise<T[]>} - parsed query result rows
      * @memberof AthenaClient
      */
-    private getQueryResults<T>(queryExecutionId: string, nextToken?: string, previousResults?: T[]): Promise<T[]> {
+    private getQueryResults<T>(query: Query<T>, nextToken?: string, previousResults?: T[]): Promise<T[]> {
         const requestParams: Athena.Types.GetQueryResultsInput = {
             NextToken: nextToken,
-            QueryExecutionId: queryExecutionId,
+            QueryExecutionId: query.athenaId,
         };
 
-        let columns: AthenaColumn[];
-
-        return new Promise<any>((resolve, reject) => {
+        return new Promise<T[]>((resolve, reject) => {
             this.client.getQueryResults(requestParams, async (err, data) => {
                 if (err != null) {
                     return reject(err);
                 }
 
-                columns = this.setColumnParsers(data);
-
-                const isFirstPage = (previousResults == null && nextToken == null);
-
-                let results = this.parseRows<T>(data.ResultSet.Rows, columns, isFirstPage);
-
-                if (previousResults != null) {
-                    results = previousResults.concat(results);
+                if (!query.hasColumns()) {
+                    query.columns = this.setColumnParsers(data);
                 }
+
+                const isFirstPage = !query.hasResults() && nextToken == null;
+
+                query.results = query.results.concat(this.parseRows<T>(data.ResultSet.Rows, query.columns, isFirstPage));
 
                 if (data.NextToken != null) {
-                    results = await this.getQueryResults<T>(queryExecutionId, data.NextToken, results);
+                    query.results = await this.getQueryResults<T>(query, data.NextToken);
                 }
 
-                resolve(results);
+                resolve(query.results);
             });
         });
     }
@@ -269,12 +262,12 @@ export class AthenaClient {
      * @private
      * @template T
      * @param {Athena.Row[]} rows - query result rows
-     * @param {AthenaColumn[]} columns - query result columns
+     * @param {Column[]} columns - query result columns
      * @param {boolean} isFirstPage
      * @returns {T[]} - parsed result according to needed parser
      * @memberof AthenaClient
      */
-    private parseRows<T>(rows: Athena.Row[], columns: AthenaColumn[], isFirstPage = false): T[] {
+    private parseRows<T>(rows: Athena.Row[], columns: Column[], isFirstPage = false): T[] {
         const results: T[] = [];
 
         // Start with 1 when first line is column title (in first page)
@@ -304,14 +297,14 @@ export class AthenaClient {
      *
      * @private
      * @param {*} data - query results
-     * @returns {AthenaColumn[]} - column name and parser type
+     * @returns {Column[]} - column name and parser type
      * @memberof AthenaClient
      */
-    private setColumnParsers(data): AthenaColumn[] {
-        const columns: AthenaColumn[] = [];
+    private setColumnParsers(data): Column[] {
+        const columns: Column[] = [];
 
         for (const columnInfo of data.ResultSet.ResultSetMetadata.ColumnInfo) {
-            const column = new AthenaColumn();
+            const column = new Column();
             column.name = columnInfo.Name;
 
             switch (columnInfo.Type as AthenaDataTypeEnum) {
@@ -322,29 +315,29 @@ export class AthenaClient {
                 case AthenaDataTypeEnum.Float:
                 case AthenaDataTypeEnum.Double:
                 case AthenaDataTypeEnum.Decimal:
-                    column.parse = AthenaColumn.parseNumber;
+                    column.parse = Column.parseNumber;
                     break;
 
                 case AthenaDataTypeEnum.Char:
                 case AthenaDataTypeEnum.Varchar:
-                    column.parse = AthenaColumn.parseString;
+                    column.parse = Column.parseString;
                     break;
 
                 case AthenaDataTypeEnum.Boolean:
-                    column.parse = AthenaColumn.parseBoolean;
+                    column.parse = Column.parseBoolean;
                     break;
 
                 case AthenaDataTypeEnum.Date:
                 case AthenaDataTypeEnum.Timestamp:
                 case AthenaDataTypeEnum.TimestampWithTz:
-                    column.parse = AthenaColumn.parseDate;
+                    column.parse = Column.parseDate;
                     break;
 
                 case AthenaDataTypeEnum.Array:
-                    column.parse = AthenaColumn.parseArray;
+                    column.parse = Column.parseArray;
                     break;
                 case AthenaDataTypeEnum.Json:
-                    column.parse = AthenaColumn.parseJson;
+                    column.parse = Column.parseJson;
                     break;
                 case AthenaDataTypeEnum.Binary:
                 case AthenaDataTypeEnum.Map:
@@ -372,180 +365,46 @@ export class AthenaClient {
             QueryExecutionId: query.athenaId,
         };
 
+        const waitTime = this.config.waitTime * 1000;
+
         return new Promise<void>((resolve, reject) => {
-            this.client.getQueryExecution(requestParams, async (err, data) => {
-                if (err != null) {
-                    return reject(err);
-                }
+            const interval = setInterval(() => {
+                this.client.getQueryExecution(requestParams, (err, data) => {
+                    if (err != null) {
+                        return reject(err);
+                    }
 
-                query.status = data.QueryExecution.Status.State;
+                    query.status = data.QueryExecution.Status.State;
 
-                switch (query.status) {
-                    case 'SUCCEEDED':
-                        resolve();
+                    switch (query.status) {
+                        case 'SUCCEEDED':
+                            succeeded();
+                            break;
+                        case 'QUEUED':
+                        case 'RUNNING':
+                            break;
+                        case 'CANCELLED':
+                            errored(new QueryCanceledException());
+                            break;
+                        case 'FAILED':
+                            errored(new AthenaClientException('Query failed'));
+                            break;
+                        default:
+                            errored(new AthenaClientException(`Query Status '${data.QueryExecution.Status.State}' not supported`));
+                            break;
+                    }
+                });
+            }, waitTime);
 
-                        break;
-                    case 'QUEUED':
-                    case 'RUNNING':
-                        console.log(query.waitTime);
-
-                        const waitTime = query.waitTime * 1000;
-
-                        await this.sleep(waitTime);
-
-                        query.waitTime = query.waitTime * 2;
-                        await this.waitUntilSucceedQuery(query);
-
-                        // setTimeout(async () => {
-                        //     try {
-                        //         query.waitTime = Math.pow(query.waitTime, 2);
-                        //         await this.waitUntilSucceedQuery(query);
-                        //         resolve();
-                        //     } catch (e) {
-                        //         reject(e);
-                        //     }
-                        // }, waitTime);
-
-                        break;
-
-                    case 'CANCELLED':
-                        reject(new QueryCanceledException());
-
-                        break;
-                    case 'FAILED':
-                        reject(new AthenaClientException('Query failed'));
-
-                        break;
-                    default:
-                        reject(new AthenaClientException(`Query Status '${data.QueryExecution.Status.State}' not supported`));
-
-                        break;
-                }
-            });
-        });
-    }
-
-    private sleep(ms: number): Promise<void> {
-        return new Promise<void>((resolve: any) => {
-            setTimeout(() => {
+            const succeeded = () => {
+                clearInterval(interval);
                 resolve();
-            }, ms);
+            };
+
+            const errored = (err) => {
+                clearInterval(interval);
+                reject(err);
+            };
         });
-    }
-}
-
-/**
- * AthenaColumn class
- *
- * @class AthenaColumn
- */
-class AthenaColumn {
-    public name: string;
-
-    public parse: (value: string) => any;
-
-    /**
-     * Parses string to number
-     *
-     * @static
-     * @param {string} value - string to parse
-     * @returns {number} - parsed number
-     * @memberof AthenaColumn
-     */
-    public static parseNumber(value: string): number {
-        const result = Number(value);
-
-        if (isNaN(result)) {
-            throw new Error(`The value '${value} 'is not a number`);
-        }
-
-        return result;
-    }
-
-    /**
-     * Parses string
-     *
-     * @static
-     * @param {string} value - string to parse
-     * @returns {string} - parsed string
-     * @memberof AthenaColumn
-     */
-    public static parseString(value: string): string {
-        return value;
-    }
-
-    /**
-     * Parses boolean-like Athena expression to boolean
-     *
-     * @static
-     * @param {string} value - boolean-like string
-     * @returns {boolean} - parsed string
-     * @memberof AthenaColumn
-     */
-    public static parseBoolean(value: string): boolean {
-        return (
-            value === 'true'
-            || value === 'TRUE'
-            || value === 't'
-            || value === 'T'
-            || value === 'yes'
-            || value === 'YES'
-            || value === '1'
-        );
-    }
-
-    /**
-     * Parses string to date
-     *
-     * @static
-     * @param {string} value - string to parse
-     * @returns {Date} - parsed date
-     * @memberof AthenaColumn
-     */
-    public static parseDate(value: string): Date {
-        return new Date(value);
-    }
-
-    /**
-     * Parses string to array
-     *
-     * @static
-     * @param {string} arrayInString - string to parse
-     * @returns {any[]} - parsed array
-     * @memberof AthenaColumn
-     */
-    public static parseArray(arrayInString: string): number[] | string[] {
-        arrayInString = arrayInString.replace(/\[|\]/gi, '');
-
-        if (arrayInString == null || arrayInString === '') {
-            return [];
-        }
-
-        const values = arrayInString.split(', ');
-        const result = [];
-
-        for (const value of values) {
-            let numberValue = Number(value);
-
-            if (!Number.isNaN(numberValue)) {
-                result.push(numberValue);
-            } else {
-                result.push(value);
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Parses string to array
-     *
-     * @static
-     * @param {string} value - string to parse
-     * @returns {any[]} - parsed array
-     * @memberof AthenaColumn
-     */
-    public static parseJson(value: string): any[] {
-        return JSON.parse(value);
     }
 }

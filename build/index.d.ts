@@ -95,7 +95,7 @@ export declare class AthenaClient {
      * @private
      * @template T
      * @param {Athena.Row[]} rows - query result rows
-     * @param {AthenaColumn[]} columns - query result columns
+     * @param {Column[]} columns - query result columns
      * @param {boolean} isFirstPage
      * @returns {T[]} - parsed result according to needed parser
      * @memberof AthenaClient
@@ -106,7 +106,7 @@ export declare class AthenaClient {
      *
      * @private
      * @param {*} data - query results
-     * @returns {AthenaColumn[]} - column name and parser type
+     * @returns {Column[]} - column name and parser type
      * @memberof AthenaClient
      */
     private setColumnParsers;
@@ -119,5 +119,4 @@ export declare class AthenaClient {
      * @memberof AthenaClient
      */
     private waitUntilSucceedQuery;
-    private sleep;
 }

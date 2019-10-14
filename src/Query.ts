@@ -1,8 +1,9 @@
 'use strict';
 
 import {formatQuery} from 'pg-promise/lib/formatting';
+import {Column} from './Column';
 
-export class Query {
+export class Query<T = any> {
     public id: string;
     public athenaId: string;
     public readonly originalSql: string;
@@ -10,11 +11,21 @@ export class Query {
     public status: string;
     public sql: string;
     public waitTime: number;
+    public results: T[] = [];
+    public columns: Column[];
 
     public constructor(sql: string, parameters?: Object, id?: string) {
         this.originalSql = sql;
         this.parameters = parameters;
         this.id = id;
         this.sql = formatQuery(sql, parameters);
+    }
+
+    public hasColumns(): boolean {
+        return this.columns != null && this.columns.length > 0;
+    }
+
+    public hasResults(): boolean {
+        return this.results != null && this.results.length > 0;
     }
 }
