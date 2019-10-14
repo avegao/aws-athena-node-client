@@ -166,6 +166,7 @@ export class AthenaClient {
 
     private async executeQueryCommon(sql: string, parameters?: Object, id?: string): Promise<Query> {
         const query = new Query(sql, parameters, id);
+        query.waitTime = this.config.waitTime;
 
         this.queue.addQuery(query);
 
@@ -386,14 +387,24 @@ export class AthenaClient {
                         break;
                     case 'QUEUED':
                     case 'RUNNING':
-                        setTimeout(async () => {
-                            try {
-                                await this.waitUntilSucceedQuery(query);
-                                resolve();
-                            } catch (e) {
-                                reject(e);
-                            }
-                        }, this.config.waitTime * 1000);
+                        console.log(query.waitTime);
+
+                        const waitTime = query.waitTime * 1000;
+
+                        await this.sleep(waitTime);
+
+                        query.waitTime = query.waitTime * 2;
+                        await this.waitUntilSucceedQuery(query);
+
+                        // setTimeout(async () => {
+                        //     try {
+                        //         query.waitTime = Math.pow(query.waitTime, 2);
+                        //         await this.waitUntilSucceedQuery(query);
+                        //         resolve();
+                        //     } catch (e) {
+                        //         reject(e);
+                        //     }
+                        // }, waitTime);
 
                         break;
 
@@ -411,6 +422,14 @@ export class AthenaClient {
                         break;
                 }
             });
+        });
+    }
+
+    private sleep(ms: number): Promise<void> {
+        return new Promise<void>((resolve: any) => {
+            setTimeout(() => {
+                resolve();
+            }, ms);
         });
     }
 }

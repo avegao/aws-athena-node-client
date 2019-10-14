@@ -9,6 +9,7 @@ export class Query {
     public readonly parameters: Object;
     public status: string;
     public sql: string;
+    public waitTime: number;
 
     public constructor(sql: string, parameters?: Object, id?: string) {
         this.originalSql = sql;

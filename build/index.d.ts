@@ -119,4 +119,5 @@ export declare class AthenaClient {
      * @memberof AthenaClient
      */
     private waitUntilSucceedQuery;
+    private sleep;
 }

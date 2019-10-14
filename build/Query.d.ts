@@ -5,5 +5,6 @@ export declare class Query {
     readonly parameters: Object;
     status: string;
     sql: string;
+    waitTime: number;
     constructor(sql: string, parameters?: Object, id?: string);
 }
