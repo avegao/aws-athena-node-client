@@ -37,6 +37,20 @@
     normalize-path "^2.0.1"
     through2 "^2.0.3"
 
+"@mapbox/eslint-config-mapbox@^1.0.0":
+  version "1.2.1"
+  resolved "https://registry.npmjs.org/@mapbox/eslint-config-mapbox/-/eslint-config-mapbox-1.2.1.tgz#f0dc80d29a336a5477b146d9d32a75afc310a5e4"
+  integrity sha512-hhE2sN7L/RO+MhdHIhmpL0KLhA/sWxV1WWH998fmGimI40XDbBgG1Z4d8nTlfuf9jaRDJ88/uklSBvFRhvMeDA==
+
+"@mapbox/s3urls@^1.5.3":
+  version "1.5.3"
+  resolved "https://registry.npmjs.org/@mapbox/s3urls/-/s3urls-1.5.3.tgz#8578f51941af2ba836623f4941a761515ce92ff1"
+  integrity sha1-hXj1GUGvK6g2Yj9JQadhUVzpL/E=
+  dependencies:
+    "@mapbox/eslint-config-mapbox" "^1.0.0"
+    minimist "^1.1.0"
+    s3signed "^0.1.0"
+
 "@types/chai@^4.1.7":
   version "4.2.3"
   resolved "https://registry.npmjs.org/@types/chai/-/chai-4.2.3.tgz#419477a3d5202bad19e14c787940a61dc9ea6407"
@@ -313,6 +327,21 @@ atob@^2.1.1:
   version "2.1.2"
   resolved "https://registry.npmjs.org/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
+
+aws-sdk@^2.0.4:
+  version "2.550.0"
+  resolved "https://registry.npmjs.org/aws-sdk/-/aws-sdk-2.550.0.tgz#00a0113f4efbe7c068ac73459c77c39a32390a87"
+  integrity sha512-eZQYY7O6VJeVQvBWnctOOTOO/+aTXhy23+T7QU1FcHfuvWV7K+7+7Uats9rgMS42SQ4R8q1cIZZ1InWnmmfrEw==
+  dependencies:
+    buffer "4.9.1"
+    events "1.1.1"
+    ieee754 "1.1.13"
+    jmespath "0.15.0"
+    querystring "0.2.0"
+    sax "1.2.1"
+    url "0.10.3"
+    uuid "3.3.2"
+    xml2js "0.4.19"
 
 aws-sdk@^2.424.0:
   version "2.548.0"
@@ -1928,7 +1957,7 @@ minimist@0.0.8:
   resolved "https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz#857fcabfc3397d2625b8228262e86aa7a011b05d"
   integrity sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0=
 
-minimist@^1.2.0:
+minimist@^1.1.0, minimist@^1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/minimist/-/minimist-1.2.0.tgz#a35008b20f41383eec1fb914f4cd5df79a264284"
   integrity sha1-o1AIsg9BOD7sH7kU9M1d95omQoQ=
@@ -2706,6 +2735,13 @@ rimraf@^2.6.1, rimraf@^2.6.3:
   integrity sha512-uWjbaKIK3T1OSVptzX7Nl6PvQ3qAGtKEtVRjRuazjfL3Bx5eI409VZSqgND+4UNnmzLVdPj9FqFJNPqBZFve4w==
   dependencies:
     glob "^7.1.3"
+
+s3signed@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmjs.org/s3signed/-/s3signed-0.1.0.tgz#ae03b86259413215ed43e99285c8c347579735fb"
+  integrity sha1-rgO4YllBMhXtQ+mShcjDR1eXNfs=
+  dependencies:
+    aws-sdk "^2.0.4"
 
 safe-buffer@^5.1.0, safe-buffer@^5.1.2, safe-buffer@~5.2.0:
   version "5.2.0"
