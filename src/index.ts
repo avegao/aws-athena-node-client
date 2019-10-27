@@ -269,7 +269,7 @@ export class AthenaClient {
 
                 const isFirstPage = !query.hasResults() && nextToken == null;
 
-                query.results = query.results.concat(this.parseRows<T>(data.ResultSet.Rows, query.columns, isFirstPage));
+                query.results.push(...this.parseRows<T>(data.ResultSet.Rows, query.columns, isFirstPage));
 
                 if (data.NextToken != null) {
                     query.results = await this.getQueryResults<T>(query, data.NextToken);
@@ -295,7 +295,7 @@ export class AthenaClient {
         const results: T[] = [];
 
         // Start with 1 when first line is column title (in first page)
-        for (let rowIndex = (isFirstPage) ? 1 : 0; rowIndex < rows.length; rowIndex++) {
+        for (let rowIndex = (isFirstPage) ? 1 : 0, len = rows.length; rowIndex < len; rowIndex++) {
             const row = rows[rowIndex];
             const result: T = <T>{};
 
