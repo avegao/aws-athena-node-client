@@ -1,5 +1,3 @@
-'use strict';
-
 import {formatQuery} from 'pg-promise/lib/formatting';
 import {Column} from './Column';
 
@@ -22,10 +20,10 @@ export class Query<T = any> {
     }
 
     public hasColumns(): boolean {
-        return this.columns != null && this.columns.length > 0;
+        return this.columns?.length > 0;
     }
 
     public hasResults(): boolean {
-        return this.results != null && this.results.length > 0;
+        return this.results?.length > 0;
     }
 }

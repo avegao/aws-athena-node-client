@@ -26,6 +26,7 @@ enum AthenaDataTypeEnum {
     Array = 'array',
     Json = 'json',
     Map = 'map',
+    String = 'string',
     Struct = 'struct',
     TinyInt = 'tinyint',
     SmallInt = 'smallint',
@@ -39,10 +40,10 @@ enum AthenaDataTypeEnum {
  * @class AthenaClient
  */
 export class AthenaClient {
-    private readonly client: Athena;
-    private readonly config: AthenaClientConfig;
+    private readonly _client: Athena;
+    private readonly _config: AthenaClientConfig;
 
-    private queue: Queue;
+    private _queue: Queue;
 
     /**
      * Creates an instance of AthenaClient.
@@ -51,11 +52,11 @@ export class AthenaClient {
      * @memberof AthenaClient
      */
     public constructor(config: AthenaClientConfig) {
-        this.config = config;
-        this.config.awsConfig.apiVersion = '2017-05-18';
+        this._config = config;
+        this._config.awsConfig.apiVersion = '2017-05-18';
 
-        this.client = new Athena(this.config.awsConfig);
-        this.queue = new Queue();
+        this._client = new Athena(this._config.awsConfig);
+        this._queue = new Queue();
     }
 
     /**
@@ -101,17 +102,15 @@ export class AthenaClient {
 
         const s3 = new S3();
         awsConfig.update({
-            accessKeyId: this.config.awsConfig.accessKeyId,
-            secretAccessKey: this.config.awsConfig.secretAccessKey,
+            accessKeyId: this._config.awsConfig.accessKeyId,
+            secretAccessKey: this._config.awsConfig.secretAccessKey,
         });
 
-        const signedUrl = s3.getSignedUrl('getObject', {
+        return s3.getSignedUrl('getObject', {
             Bucket: s3Object.Bucket,
             Expires: expiration,
             Key: s3Object.Key,
         });
-
-        return signedUrl;
     }
 
     /**
@@ -124,13 +123,13 @@ export class AthenaClient {
      * @memberof AthenaClient
      */
     public async cancelQuery(id: string): Promise<void> {
-        const query = this.queue.getQueryById(id);
+        const query = this._queue.getQueryById(id);
         const requestParams: Athena.Types.StopQueryExecutionInput = {
             QueryExecutionId: query.athenaId,
         };
 
         return new Promise<void>((resolve, reject) => {
-            this.client.stopQueryExecution(requestParams, (err, data) => {
+            this._client.stopQueryExecution(requestParams, (err, data) => {
                 if (err != null) {
                     reject(err);
                 } else {
@@ -146,16 +145,16 @@ export class AthenaClient {
      * @returns {Promise<Athena.WorkGroup>} AWS WorkGroup Object
      */
     public async getWorkGroupDetails(): Promise<Athena.WorkGroup> {
-        if (this.config.workGroup == null || this.config.workGroup === '') {
+        if (this._config.workGroup == null || this._config.workGroup === '') {
             throw new Error('You must define an AWS Athena WorkGroup');
         }
 
         const parameters: Athena.GetWorkGroupInput = {
-            WorkGroup: this.config.workGroup,
+            WorkGroup: this._config.workGroup,
         };
 
         return new Promise<Athena.WorkGroup>((resolve: Function, reject: Function) => {
-            this.client.getWorkGroup(parameters, ((err: Error, data: Athena.GetWorkGroupOutput) => {
+            this._client.getWorkGroup(parameters, ((err: Error, data: Athena.GetWorkGroupOutput) => {
                 if (err != null) {
                     return reject(err);
                 }
@@ -173,9 +172,9 @@ export class AthenaClient {
     public async getOutputS3Bucket(): Promise<string> {
         let bucket: string;
 
-        if (this.config.bucketUri != null && this.config.bucketUri !== '') {
-            bucket = this.config.bucketUri;
-        } else if (this.config.workGroup != null || this.config.workGroup !== '') {
+        if (this._config.bucketUri != null && this._config.bucketUri !== '') {
+            bucket = this._config.bucketUri;
+        } else if (this._config.workGroup != null || this._config.workGroup !== '') {
             const workGroup = await this.getWorkGroupDetails();
 
             bucket = workGroup.Configuration.ResultConfiguration.OutputLocation;
@@ -189,14 +188,14 @@ export class AthenaClient {
     private async executeQueryCommon(sql: string, parameters?: Object, id?: string): Promise<Query> {
         const query = new Query(sql, parameters, id);
 
-        this.queue.addQuery(query);
+        this._queue.addQuery(query);
 
         query.athenaId = await this.startQueryExecution(query);
 
         try {
             await this.waitUntilSucceedQuery(query);
         } catch (exception) {
-            this.queue.removeQuery(query);
+            this._queue.removeQuery(query);
 
             throw exception;
         }
@@ -215,20 +214,20 @@ export class AthenaClient {
     private async startQueryExecution(query: Query): Promise<string> {
         const requestParams: Athena.Types.StartQueryExecutionInput = {
             QueryExecutionContext: {
-                Database: this.config.database,
+                Database: this._config.database,
             },
             QueryString: query.sql,
             ResultConfiguration: {
-                OutputLocation: this.config.bucketUri,
+                OutputLocation: this._config.bucketUri,
             },
         };
 
-        if (this.config.workGroup != null) {
-            requestParams.WorkGroup = this.config.workGroup;
+        if (this._config.workGroup != null) {
+            requestParams.WorkGroup = this._config.workGroup;
         }
 
         return new Promise<string>((resolve, reject) => {
-            this.client.startQueryExecution(requestParams, (err, data) => {
+            this._client.startQueryExecution(requestParams, (err, data) => {
                 if (err != null) {
                     return reject(err);
                 }
@@ -258,7 +257,7 @@ export class AthenaClient {
         };
 
         return new Promise<T[]>((resolve, reject) => {
-            this.client.getQueryResults(requestParams, async (err, data) => {
+            this._client.getQueryResults(requestParams, async (err, data) => {
                 if (err != null) {
                     return reject(err);
                 }
@@ -297,13 +296,13 @@ export class AthenaClient {
         // Start with 1 when first line is column title (in first page)
         for (let rowIndex = (isFirstPage) ? 1 : 0, len = rows.length; rowIndex < len; rowIndex++) {
             const row = rows[rowIndex];
-            const result: T = <T>{};
+            const result: T = {} as T;
 
             for (let rowDataIndex = 0; rowDataIndex < row.Data.length; rowDataIndex++) {
                 const rowData = row.Data[rowDataIndex];
                 const column = columns[rowDataIndex];
 
-                if (rowData != null && rowData.VarCharValue != null) {
+                if (rowData?.VarCharValue != null) {
                     result[column.name] = column.parse(rowData.VarCharValue);
                 } else {
                     result[column.name] = null;
@@ -344,6 +343,7 @@ export class AthenaClient {
 
                 case AthenaDataTypeEnum.Char:
                 case AthenaDataTypeEnum.Varchar:
+                case AthenaDataTypeEnum.String:
                     column.parse = Column.parseString;
                     break;
 
@@ -389,11 +389,11 @@ export class AthenaClient {
             QueryExecutionId: query.athenaId,
         };
 
-        const waitTime = this.config.waitTime * 1000;
+        const waitTime = this._config.waitTime * 1000;
 
         return new Promise<void>((resolve, reject) => {
             const interval = setInterval(() => {
-                this.client.getQueryExecution(requestParams, (err, data) => {
+                this._client.getQueryExecution(requestParams, (err, data) => {
                     if (err != null) {
                         return reject(err);
                     }

@@ -7,9 +7,9 @@ import { AthenaClientConfig } from './AthenaClientConfig';
  * @class AthenaClient
  */
 export declare class AthenaClient {
-    private readonly client;
-    private readonly config;
-    private queue;
+    private readonly _client;
+    private readonly _config;
+    private _queue;
     /**
      * Creates an instance of AthenaClient.
      *

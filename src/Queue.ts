@@ -1,5 +1,3 @@
-'use strict';
-
 import {Query} from './Query';
 
 export class Queue {

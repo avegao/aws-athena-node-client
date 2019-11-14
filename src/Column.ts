@@ -1,6 +1,5 @@
 export class Column {
     public name: string;
-
     public parse: (value: string) => any;
 
     /**
@@ -14,7 +13,7 @@ export class Column {
     public static parseNumber(value: string): number {
         const result = Number(value);
 
-        if (isNaN(result)) {
+        if (Number.isNaN(result)) {
             throw new Error(`The value '${value} 'is not a number`);
         }
 

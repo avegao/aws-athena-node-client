@@ -1,5 +1,3 @@
-'use strict';
-
 import {Athena} from 'aws-sdk';
 
 export class AthenaClientConfig {
