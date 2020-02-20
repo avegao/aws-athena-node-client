@@ -41,15 +41,8 @@ export class Column {
      * @memberof AthenaColumn
      */
     public static parseBoolean(value: string): boolean {
-        return (
-            value === 'true'
-            || value === 'TRUE'
-            || value === 't'
-            || value === 'T'
-            || value === 'yes'
-            || value === 'YES'
-            || value === '1'
-        );
+        const truthyValues = ['TRUE', 'T', 'YES', '1'];
+        return truthyValues.includes(value.toUpperCase());
     }
 
     /**

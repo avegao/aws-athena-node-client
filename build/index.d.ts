@@ -43,6 +43,7 @@ export declare class AthenaClient {
      * @memberof AthenaClient
      */
     executeQueryAndGetS3Url(sql: string, parameters?: Object, id?: string): Promise<string>;
+    executeQueryAsStream(sql: string, parameters?: Object, id?: string): Promise<any[]>;
     executeQueryAndGetDownloadSignedUrl(sql: string, parameters?: Object, id?: string, expiration?: number): Promise<string>;
     /**
      * Cancel a AWS Athena query

@@ -8,6 +8,8 @@ import {Column} from './Column';
 import * as S3 from 'aws-sdk/clients/s3';
 import {config as awsConfig} from 'aws-sdk';
 import * as s3urls from '@mapbox/s3urls';
+import * as csv from 'csvtojson';
+import TypeChecker from './TypeChecker';
 
 const expiration1Day = 60 * 60 * 24;
 
@@ -94,6 +96,40 @@ export class AthenaClient {
         const s3BucketUri = await this.getOutputS3Bucket();
 
         return `${s3BucketUri}${query.athenaId}.csv`;
+    }
+
+    public executeQueryAsStream(sql: string, parameters?: Object, id?: string): Promise<any[]> {
+        return new Promise(async (resolve, reject) => {
+            const s3 = new S3({
+                accessKeyId: this._config.awsConfig.accessKeyId,
+                secretAccessKey: this._config.awsConfig.secretAccessKey,
+            });
+            const s3Url = await this.executeQueryAndGetS3Url(sql, parameters, id);
+            const s3Object = s3urls.fromUrl(s3Url);
+            const stream = s3.getObject({
+                Bucket: s3Object.Bucket,
+                Key: s3Object.Key,
+            }).createReadStream();
+            const parsedResults = [];
+            stream
+                .pipe(
+                    csv({
+                        ignoreEmpty: true,
+                        trim: true,
+                    }).on('data', (row) => {
+                        const rowObj = JSON.parse(row.toString('utf8'));
+                        for (let [prop, value] of Object.entries(rowObj)) {
+                            const parser = new TypeChecker(value as string);
+                            rowObj[prop] = parser.parse();
+                        }
+                        parsedResults.push(rowObj);
+                    }).on('end', () => {
+                        resolve(parsedResults);
+                    }).on('error', (err) => {
+                        reject(err);
+                    }),
+                );
+        });
     }
 
     public async executeQueryAndGetDownloadSignedUrl(sql: string, parameters?: Object, id?: string, expiration = expiration1Day): Promise<string> {
