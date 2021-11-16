@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@mapbox/s3urls": "^1.5.3",
-    "aws-sdk": "^2.424.0",
+    "aws-sdk": "^2.814.0",
     "pg-promise": "^8.6.4"
   }
 }
