@@ -176,3 +176,6 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 .scannerwork/
+
+dist
+tsconfig.tsbuildinfo

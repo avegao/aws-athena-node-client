@@ -1,7 +1,0 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class AthenaClientException extends Error {
-}
-exports.AthenaClientException = AthenaClientException;
-
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3NyYy9leGNlcHRpb24vQXRoZW5hQ2xpZW50RXhjZXB0aW9uLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7O0FBQUEsTUFBYSxxQkFBc0IsU0FBUSxLQUFLO0NBRS9DO0FBRkQsc0RBRUMiLCJmaWxlIjoiZXhjZXB0aW9uL0F0aGVuYUNsaWVudEV4Y2VwdGlvbi5qcyIsInNvdXJjZXNDb250ZW50IjpbImV4cG9ydCBjbGFzcyBBdGhlbmFDbGllbnRFeGNlcHRpb24gZXh0ZW5kcyBFcnJvciB7XG5cbn1cbiJdfQ==
