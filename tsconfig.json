@@ -1,19 +1,23 @@
 {
   "compilerOptions": {
-    "lib": ["es2018"],
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "./src",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "lib": ["ES2020"],
     "module": "commonjs",
     "moduleResolution": "node",
-    "outDir": "build",
-    "preserveConstEnums": true,
-    "removeComments": false,
+    "outDir": "./dist",
+    "removeComments": true,
+    "rootDir": "./src",
+    "skipLibCheck": true,
     "sourceMap": true,
-    "target": "es2018",
-    "declaration": true
-  },
-  "exclude": [
-    "build",
-    "gulpfile.*",
-    "node_modules",
-    "test"
-  ]
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "target": "ES2020"
+  }
 }
