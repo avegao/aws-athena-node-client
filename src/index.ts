@@ -1,11 +1,11 @@
-import {Athena, config as awsConfig, S3} from 'aws-sdk';
+import {Athena, S3} from 'aws-sdk';
 import {AthenaClientConfig} from './AthenaClientConfig';
 import {Queue} from './Queue';
 import {Query} from './Query';
 import {AthenaClientException} from './exception/AthenaClientException';
 import {QueryCanceledException} from './exception/QueryCanceledException';
 import {Column} from './Column';
-import * as s3urls from '@mapbox/s3urls';
+import s3urls from '@mapbox/s3urls';
 import {GetQueryResultsOutput} from 'aws-sdk/clients/athena';
 
 const expiration1Day = 60 * 60 * 24;
@@ -52,9 +52,7 @@ export class AthenaClient {
      */
     public constructor(config: AthenaClientConfig) {
         this._config = config;
-        this._config.awsConfig.apiVersion = '2017-05-18';
-
-        this._client = new Athena(this._config.awsConfig);
+        this._client = new Athena();
         this._queue = new Queue();
     }
 
@@ -100,10 +98,6 @@ export class AthenaClient {
         const s3Object = s3urls.fromUrl(s3Url);
 
         const s3 = new S3();
-        awsConfig.update({
-            accessKeyId: this._config.awsConfig.accessKeyId,
-            secretAccessKey: this._config.awsConfig.secretAccessKey,
-        });
 
         return s3.getSignedUrl('getObject', {
             Bucket: s3Object.Bucket,
