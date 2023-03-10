@@ -1,18 +1,19 @@
+// @ts-ignore
 import {formatQuery} from 'pg-promise/lib/formatting';
 import {Column} from './Column';
 
-export class Query<T = any> {
-    public id: string;
+export class Query<T> {
+    public id?: string;
     public athenaId: string;
     public readonly originalSql: string;
-    public readonly parameters: Object;
+    public readonly parameters?: object;
     public status: string;
     public sql: string;
     public waitTime: number;
     public results: T[] = [];
     public columns: Column[];
 
-    public constructor(sql: string, parameters?: Object, id?: string) {
+    public constructor(sql: string, parameters?: object, id?: string) {
         this.originalSql = sql;
         this.parameters = parameters;
         this.id = id;

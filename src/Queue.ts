@@ -1,9 +1,9 @@
 import {Query} from './Query';
 
 export class Queue {
-    public queries: Query[] = [];
+    public queries: Query<unknown>[] = [];
 
-    public addQuery(query: Query): void {
+    public addQuery(query: Query<unknown>): void {
         if (query.id == null || query.id === '') {
             query.id = query.athenaId;
         }
@@ -11,7 +11,7 @@ export class Queue {
         this.queries.push(query);
     }
 
-    public removeQuery(query: Query): void {
+    public removeQuery(query: Query<unknown>): void {
         const index = this.queries.indexOf(query);
 
         if (index > -1) {
@@ -19,7 +19,7 @@ export class Queue {
         }
     }
 
-    public getQueryById(id: string): Query {
+    public getQueryById(id: string): Query<unknown> {
         for (const query of this.queries) {
             if (id === query.id) {
                 return query;

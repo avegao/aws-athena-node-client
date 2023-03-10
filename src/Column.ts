@@ -1,6 +1,6 @@
 export class Column {
     public name: string;
-    public parse: (value: string) => any;
+    public parse: (value: string) => unknown;
 
     /**
      * Parses string to number
@@ -80,15 +80,15 @@ export class Column {
         }
 
         const values = arrayInString.split(', ');
-        const result = [];
+        const result: number[] | string[] = [];
 
         for (const value of values) {
             let numberValue = Number(value);
 
             if (!Number.isNaN(numberValue)) {
-                result.push(numberValue);
+                result.push(numberValue as never);
             } else {
-                result.push(value);
+                result.push(value as never);
             }
         }
 

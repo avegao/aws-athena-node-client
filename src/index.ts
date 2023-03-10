@@ -1,13 +1,12 @@
-import {Athena} from 'aws-sdk';
+import {Athena, config as awsConfig, S3} from 'aws-sdk';
 import {AthenaClientConfig} from './AthenaClientConfig';
 import {Queue} from './Queue';
 import {Query} from './Query';
 import {AthenaClientException} from './exception/AthenaClientException';
 import {QueryCanceledException} from './exception/QueryCanceledException';
 import {Column} from './Column';
-import * as S3 from 'aws-sdk/clients/s3';
-import {config as awsConfig} from 'aws-sdk';
 import * as s3urls from '@mapbox/s3urls';
+import {GetQueryResultsOutput} from 'aws-sdk/clients/athena';
 
 const expiration1Day = 60 * 60 * 24;
 
@@ -72,10 +71,10 @@ export class AthenaClient {
      *
      * @memberof AthenaClient
      */
-    public async executeQuery<T>(sql: string, parameters?: Object, id?: string): Promise<T[]> {
-        const query = await this.executeQueryCommon(sql, parameters, id);
+    public async executeQuery<T extends Object>(sql: string, parameters?: Object, id?: string): Promise<T[]> {
+        const query = await this.executeQueryCommon<T>(sql, parameters, id);
 
-        return await this.getQueryResults(query);
+        return this.getQueryResults<T>(query);
     }
 
     /**
@@ -177,7 +176,7 @@ export class AthenaClient {
         } else if (this._config.workGroup != null || this._config.workGroup !== '') {
             const workGroup = await this.getWorkGroupDetails();
 
-            bucket = workGroup.Configuration.ResultConfiguration.OutputLocation;
+            bucket = workGroup.Configuration?.ResultConfiguration?.OutputLocation ?? '';
         } else {
             throw new Error('You must define a S3 Bucket URI and/or a WorkGroup');
         }
@@ -185,8 +184,8 @@ export class AthenaClient {
         return bucket;
     }
 
-    private async executeQueryCommon(sql: string, parameters?: Object, id?: string): Promise<Query> {
-        const query = new Query(sql, parameters, id);
+    private async executeQueryCommon<T>(sql: string, parameters?: Object, id?: string): Promise<Query<T>> {
+        const query = new Query<T>(sql, parameters, id);
 
         this._queue.addQuery(query);
 
@@ -211,7 +210,7 @@ export class AthenaClient {
      * @returns {Promise<string>} - query execution id
      * @memberof AthenaClient
      */
-    private async startQueryExecution(query: Query): Promise<string> {
+    private async startQueryExecution(query: Query<unknown>): Promise<string> {
         const requestParams: Athena.Types.StartQueryExecutionInput = {
             QueryExecutionContext: {
                 Database: this._config.database,
@@ -232,7 +231,7 @@ export class AthenaClient {
                     return reject(err);
                 }
 
-                return resolve(data.QueryExecutionId);
+                return resolve(data.QueryExecutionId ?? '');
             });
         });
     }
@@ -250,7 +249,7 @@ export class AthenaClient {
      * @returns {Promise<T[]>} - parsed query result rows
      * @memberof AthenaClient
      */
-    private getQueryResults<T>(query: Query<T>, nextToken?: string, previousResults?: T[]): Promise<T[]> {
+    private getQueryResults<T extends Object>(query: Query<T>, nextToken?: string, previousResults?: T[]): Promise<T[]> {
         const requestParams: Athena.Types.GetQueryResultsInput = {
             NextToken: nextToken,
             QueryExecutionId: query.athenaId,
@@ -268,7 +267,7 @@ export class AthenaClient {
 
                 const isFirstPage = !query.hasResults() && nextToken == null;
 
-                query.results.push(...this.parseRows<T>(data.ResultSet.Rows, query.columns, isFirstPage));
+                query.results.push(...this.parseRows<T>(data.ResultSet?.Rows ?? [], query.columns, isFirstPage));
 
                 if (data.NextToken != null) {
                     query.results = await this.getQueryResults<T>(query, data.NextToken);
@@ -290,23 +289,27 @@ export class AthenaClient {
      * @returns {T[]} - parsed result according to needed parser
      * @memberof AthenaClient
      */
-    private parseRows<T>(rows: Athena.Row[], columns: Column[], isFirstPage = false): T[] {
+    private parseRows<T extends Object>(rows: Athena.Row[], columns: Column[], isFirstPage = false): T[] {
         const results: T[] = [];
 
         // Start with 1 when first line is column title (in first page)
         for (let rowIndex = (isFirstPage) ? 1 : 0, len = rows.length; rowIndex < len; rowIndex++) {
             const row = rows[rowIndex];
-            const result: T = {} as T;
+            const result = {} as T;
+            const dataLength = row.Data?.length ?? 0;
 
-            for (let rowDataIndex = 0; rowDataIndex < row.Data.length; rowDataIndex++) {
-                const rowData = row.Data[rowDataIndex];
+            for (let rowDataIndex = 0; rowDataIndex < dataLength; rowDataIndex++) {
+                const rowData = row.Data?.[rowDataIndex];
                 const column = columns[rowDataIndex];
+                const columnName = column.name;
+
+                let value: unknown | null = null;
 
                 if (rowData?.VarCharValue != null) {
-                    result[column.name] = column.parse(rowData.VarCharValue);
-                } else {
-                    result[column.name] = null;
+                    value = column.parse(rowData.VarCharValue);
                 }
+
+                Reflect.set(result, columnName, value);
             }
 
             results.push(result);
@@ -323,10 +326,10 @@ export class AthenaClient {
      * @returns {Column[]} - column name and parser type
      * @memberof AthenaClient
      */
-    private setColumnParsers(data): Column[] {
+    private setColumnParsers(data: GetQueryResultsOutput): Column[] {
         const columns: Column[] = [];
 
-        for (const columnInfo of data.ResultSet.ResultSetMetadata.ColumnInfo) {
+        for (const columnInfo of data.ResultSet?.ResultSetMetadata?.ColumnInfo ?? []) {
             const column = new Column();
             column.name = columnInfo.Name;
 
@@ -384,7 +387,7 @@ export class AthenaClient {
      * @returns {Promise<void>} - promise that will resolve once the operation has finished
      * @memberof AthenaClient
      */
-    private async waitUntilSucceedQuery(query: Query): Promise<void> {
+    private async waitUntilSucceedQuery(query: Query<unknown>): Promise<void> {
         const requestParams: Athena.Types.GetQueryExecutionInput = {
             QueryExecutionId: query.athenaId,
         };
@@ -398,7 +401,7 @@ export class AthenaClient {
                         return reject(err);
                     }
 
-                    query.status = data.QueryExecution.Status.State;
+                    query.status = data?.QueryExecution?.Status?.State ?? 'undefined';
 
                     switch (query.status) {
                         case 'SUCCEEDED':
@@ -414,19 +417,21 @@ export class AthenaClient {
                             errored(new AthenaClientException('Query failed'));
                             break;
                         default:
-                            errored(new AthenaClientException(`Query Status '${data.QueryExecution.Status.State}' not supported`));
+                            errored(new AthenaClientException(`Query Status '${query.status}' not supported`));
                             break;
                     }
                 });
             }, waitTime);
 
-            const succeeded = () => {
+            const succeeded = (): void => {
                 clearInterval(interval);
+
                 resolve();
             };
 
-            const errored = (err) => {
+            const errored = (err: Error): void => {
                 clearInterval(interval);
+
                 reject(err);
             };
         });
