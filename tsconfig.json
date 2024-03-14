@@ -1,23 +1,27 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Node 18",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "baseUrl": "./src",
     "declaration": true,
+    "incremental": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "incremental": true,
     "lib": ["ES2020"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "outDir": "./dist",
     "removeComments": true,
-    "rootDir": "./src",
-    "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true,
-    "strictPropertyInitialization": false,
+    "skipLibCheck": true,
     "target": "ES2020"
-  }
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "test"
+  ]
 }

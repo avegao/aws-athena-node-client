@@ -1,4 +1,4 @@
-import {Query} from './Query';
+import {Query} from './Query.js';
 
 export class Queue {
     public queries: Query<unknown>[] = [];

@@ -21,7 +21,7 @@ yarn add aws-athena-node-client
 ### Create client
 
 ```js
-const athenaClient = new AthenaClient({
+const athenaClient = new Athenathor({
     awsConfig: {
         accessKeyId: 'DASCDAS82941',
         apiVersion: '2017-05-18',

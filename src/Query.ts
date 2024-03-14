@@ -1,19 +1,21 @@
-// @ts-ignore
-import {formatQuery} from 'pg-promise/lib/formatting';
-import {Column} from './Column';
+import {formatQuery} from 'pg-promise/lib/formatting.js';
+import {Column} from './Column.js';
+import {type QueryExecutionState} from '@aws-sdk/client-athena';
 
 export class Query<T> {
     public id?: string;
     public athenaId: string;
     public readonly originalSql: string;
-    public readonly parameters?: object;
-    public status: string;
+    public readonly parameters?: Record<string, unknown>;
+    public status: QueryExecutionState;
     public sql: string;
     public waitTime: number;
     public results: T[] = [];
     public columns: Column[];
+    public cacheInMinutes?: number;
+    public s3Location?: string;
 
-    public constructor(sql: string, parameters?: object, id?: string) {
+    public constructor(sql: string, parameters?: Record<string, unknown>, id?: string) {
         this.originalSql = sql;
         this.parameters = parameters;
         this.id = id;
