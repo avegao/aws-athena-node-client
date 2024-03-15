@@ -1,10 +1,11 @@
 import {Query} from './Query.js';
+import {isEmpty} from 'lodash-es';
 
 export class Queue {
     public queries: Query<unknown>[] = [];
 
     public addQuery(query: Query<unknown>): void {
-        if (query.id == null || query.id === '') {
+        if (isEmpty(query.id)) {
             query.id = query.athenaId;
         }
 
@@ -20,12 +21,12 @@ export class Queue {
     }
 
     public getQueryById(id: string): Query<unknown> {
-        for (const query of this.queries) {
-            if (id === query.id) {
-                return query;
-            }
-        }
+        const query = this.queries.find((query) => query.id === id);
 
-        throw new Error('Query ID not found');
+        if (query == null) {
+            throw new Error('Query ID not found');
+        } else {
+            return query;
+        }
     }
 }
