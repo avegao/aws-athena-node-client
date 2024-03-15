@@ -200,12 +200,6 @@ export class Athenathor {
             ResultConfiguration: {
                 OutputLocation: this._config.bucketUri,
             },
-            ResultReuseConfiguration: {
-                ResultReuseByAgeConfiguration: {
-                    Enabled: true,
-                    MaxAgeInMinutes: 60,
-                },
-            },
         };
 
         if (this._config.workGroup != null) {
@@ -216,7 +210,7 @@ export class Athenathor {
             input.ResultReuseConfiguration = {
                 ResultReuseByAgeConfiguration: {
                     Enabled: true,
-                    MaxAgeInMinutes: 60,
+                    MaxAgeInMinutes: query.cacheInMinutes,
                 },
             };
         }
