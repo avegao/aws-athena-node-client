@@ -1,3 +1,5 @@
+import destr from 'destr';
+
 export class Column {
     public name: string;
     public parse: (value: string) => unknown;
@@ -103,7 +105,7 @@ export class Column {
      * @returns {any[]} - parsed array
      * @memberof AthenaColumn
      */
-    public static parseJson(value: string): any[] {
-        return JSON.parse(value);
+    public static parseJson(value: string): unknown[] {
+        return destr(value);
     }
 }
