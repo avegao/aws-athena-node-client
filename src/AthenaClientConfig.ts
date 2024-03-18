@@ -1,9 +1,9 @@
-import {S3Client} from '@aws-sdk/client-s3';
+import {type S3Client} from '@aws-sdk/client-s3';
 
-export class AthenaClientConfig {
-    public readonly database: string;
-    public readonly workGroup?: string;
-    public readonly bucketUri?: string;
-    public readonly waitTimeInSeconds: number;
-    public readonly s3Client?: S3Client;
+export interface AthenaClientConfig {
+    readonly database: string;
+    readonly workGroup?: string;
+    readonly bucketUri?: string;
+    readonly waitTimeInSeconds: number;
+    readonly s3Client?: S3Client;
 }

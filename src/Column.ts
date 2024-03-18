@@ -1,8 +1,15 @@
 import destr from 'destr';
 
+export type ColumnParse = (value: string) => unknown;
+
 export class Column {
     public name: string;
     public parse: (value: string) => unknown;
+
+    public constructor(name: string, parse: ColumnParse) {
+        this.name = name;
+        this.parse = parse;
+    }
 
     /**
      * Parses string to number
@@ -10,7 +17,6 @@ export class Column {
      * @static
      * @param {string} value - string to parse
      * @returns {number} - parsed number
-     * @memberof AthenaColumn
      */
     public static parseNumber(value: string): number {
         const result = Number(value);
@@ -28,7 +34,6 @@ export class Column {
      * @static
      * @param {string} value - string to parse
      * @returns {string} - parsed string
-     * @memberof AthenaColumn
      */
     public static parseString(value: string): string {
         return value;
@@ -40,7 +45,6 @@ export class Column {
      * @static
      * @param {string} value - boolean-like string
      * @returns {boolean} - parsed string
-     * @memberof AthenaColumn
      */
     public static parseBoolean(value: string): boolean {
         return (
@@ -60,7 +64,6 @@ export class Column {
      * @static
      * @param {string} value - string to parse
      * @returns {Date} - parsed date
-     * @memberof AthenaColumn
      */
     public static parseDate(value: string): Date {
         return new Date(value);
@@ -72,10 +75,9 @@ export class Column {
      * @static
      * @param {string} arrayInString - string to parse
      * @returns {any[]} - parsed array
-     * @memberof AthenaColumn
      */
     public static parseArray(arrayInString: string): number[] | string[] {
-        arrayInString = arrayInString.replace(/\[|\]/gi, '');
+        arrayInString = arrayInString.replace(/[\[\]]/gi, '');
 
         if (arrayInString == null || arrayInString === '') {
             return [];
@@ -103,7 +105,6 @@ export class Column {
      * @static
      * @param {string} value - string to parse
      * @returns {any[]} - parsed array
-     * @memberof AthenaColumn
      */
     public static parseJson(value: string): unknown[] {
         return destr(value);

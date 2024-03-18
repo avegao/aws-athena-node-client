@@ -5,7 +5,7 @@ import { Column } from '../src/Column.js';
 describe('query class', () => {
     test('Query with columns and no results', () => {
         const query = new Query('SELECT 1');
-        query.columns = [new Column()];
+        query.columns = [new Column('foo', Column.parseString)];
 
         expect(query.hasColumns()).toBe(true);
         expect(query.hasResults()).toBe(false);
@@ -21,7 +21,7 @@ describe('query class', () => {
 
     test('Query with columns and results', () => {
         const query = new Query('SELECT 1');
-        query.columns = [new Column()];
+        query.columns = [new Column('foo', Column.parseString)];
         query.results = [{foo: 'bar'}];
 
         expect(query.hasColumns()).toBe(true);

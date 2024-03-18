@@ -34,7 +34,7 @@ describe('queue', () => {
 
     test('Get query by id', () => {
         const id = 'abcd';
-        const query = new Query('SELECT 1', undefined, id);
+        const query = new Query('SELECT 1', undefined, undefined, id);
 
         queue.addQuery(query);
 
@@ -49,7 +49,7 @@ describe('queue', () => {
     });
 
     test('Get query by id not found', () => {
-        const query = new Query('SELECT 1', undefined, 'abcd');
+        const query = new Query('SELECT 1', undefined, undefined, 'abcd');
 
         queue.addQuery(query);
 
