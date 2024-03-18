@@ -36,7 +36,7 @@ const athenaNodeClient = new AthenaNodeClient({
 const query = `SELECT 1`;
 
 try {
-    const results = await athenaClient.executeQuery<T>(query);
+    const results = await athenaNodeClient.executeQuery<T>(query);
     console.log(results);
 } catch (error) {
     console.error(error);
@@ -49,14 +49,14 @@ If you want to use AWS Athena cache, you can specify that cache in minutes. If y
 provide this query configuration, Athena doesn't use this cache.
 
 ```ts
-const results = await athenaClient.executeQuery<T>(query, {
+const results = await athenaNodeClient.executeQuery<T>(query, {
     cacheInMinutes: 60,
 });
 ```
 
 #### Parameters
 
-This project don't support native query parameters becase I consider that are very simple and useless, then this project
+This project doesn't support native query parameters becase I consider that are very simple and useless, then this project
 use [pg-promise](https://github.com/vitaly-t/pg-promise) package to format the SQL with parameters to prevent SQL
 Injection attacks. You can visit https://github.com/vitaly-t/pg-promise?tab=readme-ov-file#named-parameters for more
 info.
@@ -64,10 +64,10 @@ info.
 ```ts
 const query = 'SELECT name, surname, age FROM users WHERE name = $(name) AND surname = $(surname)';
 
-const results = await athenaClient.executeQuery<T>(query, {
+const results = await athenaNodeClient.executeQuery<T>(query, {
     parameters: {
         name: 'John',
-        surname: 'Due',
+        surname: 'Doe',
     },
 });
 ```
@@ -78,7 +78,7 @@ const results = await athenaClient.executeQuery<T>(query, {
 const query = `SELECT 1`;
 
 try {
-    const results = await athenaClient.executeQueryAndGetS3Url(query);
+    const results = await athenaNodeClient.executeQueryAndGetS3Url(query);
     console.log(results);  // Print s3://S3_BUCKET_NAME/QUERY_ID.csv
 } catch (error) {
     console.error(error);
@@ -91,7 +91,10 @@ try {
 const query = `SELECT 1`;
 
 try {
-    const results = await athenaClient.executeQuery<T>(query, parameters, 'hdaiuh33r8uyjdkas');
+    const results = await athenaNodeClient.executeQuery<T>(query, {
+        parameters,
+        id: 'hdaiuh33r8uyjdkas',
+    });
     console.log(results);
 } catch (error) {
     if (!(error instanceof QueryCanceledException)) {
@@ -104,7 +107,7 @@ You must run this code in a distinct thread than the query execution thread.
 
 ```ts
 try {
-    await athenaClient.cancelQuery('hdaiuh33r8uyjdkas');
+    await athenaNodeClient.cancelQuery('hdaiuh33r8uyjdkas');
 } catch (error) {
     console.error(error);
 }
@@ -142,7 +145,7 @@ import {AthenaClient} from '@aws-sdk/client-athena';
 
 const athena = new AthenaClient({});
 
-const athenaClient = new AthenaNodeClient(athena, {
+const athenaNodeClient = new AthenaNodeClient(athena, {
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
     waitTime: 0.5,
@@ -150,7 +153,7 @@ const athenaClient = new AthenaNodeClient(athena, {
 });
 ```
 
-- If you methods `executeQueryAndGetS3Key` `executeQueryAndGetDownloadSignedUrl` now you must create your S3 client
+- If you use methods `executeQueryAndGetS3Key` `executeQueryAndGetDownloadSignedUrl` now you must create your S3 client
 before. The reason is the same with the Athena client.
 
 Before
@@ -181,7 +184,7 @@ const s3 = new S3({
     useDualstackEndpoint: true, // recommended to support IPv6
 });
 
-const athenaClient = new AthenaNodeClient(athena, {
+const athenaNodeClient = new AthenaNodeClient(athena, {
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
     waitTime: 0.5,
@@ -206,10 +209,10 @@ const results = await athenaClient.executeQuery<T>(query, parameters, queryId);
 After
 
 ```ts
-const results = await athenaClient.executeQuery<T>(query, {
+const results = await athenaNodeClient.executeQuery<T>(query, {
     parameters: {
         name: 'John',
-        surname: 'Due',
+        surname: 'Doe',
     },
     id: 'abcd',
     cacheInMinutes: 60,
