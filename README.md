@@ -4,17 +4,17 @@
 
 Using NPM:
 ```shell
-npm install aws-athena-node-client
+npm install aws-athena-node-client @aws-sdk/client-athena
 ```
 
 Using yarn:
-```shell
-yarn add aws-athena-node-client
+```shell 
+yarn add aws-athena-node-client @aws-sdk/client-athena
 ```
 
 Using pnpm:
 ```shell
-pnpm add aws-athena-node-client
+pnpm add aws-athena-node-client @aws-sdk/client-athena
 ```
 
 ## Use
@@ -74,6 +74,12 @@ const results = await athenaNodeClient.executeQuery<T>(query, {
 
 #### Run query and get S3 URL with results
 
+You need to install `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`
+
+```shell
+pnpm add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
+
 ```ts
 const query = `SELECT 1`;
 
@@ -119,7 +125,11 @@ try {
 - Client class renamed to `AthenaNodeClient` to prevent issues with `@aws-sdk/client-athena` classes naming.
 - Now you must instance `AthenaClient` from `@aws-sdk/client-athena` package. This is to optimize support for AWS Lambda
 functions (`@aws-sdk/*` packages are included in AWS Lambda runtime), use the most updated version of this 
-package in your project and you can use more custom configurations in the AWS SDK client, like roles.
+package in your project and you can use more custom configurations in the AWS SDK client, like roles. You need to execute:
+
+```shell
+pnpm add @aws-sdk/client-athena
+```
 
 Before
 
@@ -154,7 +164,11 @@ const athenaNodeClient = new AthenaNodeClient(athena, {
 ```
 
 - If you use methods `executeQueryAndGetS3Key` `executeQueryAndGetDownloadSignedUrl` now you must create your S3 client
-before. The reason is the same with the Athena client.
+before. The reason is the same with the Athena client. You need to execute:
+
+```shell
+pnpm add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+```
 
 Before
 
