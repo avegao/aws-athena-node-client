@@ -1,6 +1,6 @@
 {
   "name": "aws-athena-node-client",
-  "version": "2.0.1-beta.1",
+  "version": "2.0.1",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
