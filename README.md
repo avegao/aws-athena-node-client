@@ -232,3 +232,162 @@ const results = await athenaNodeClient.executeQuery<T>(query, {
     cacheInMinutes: 60,
 });
 ```
+
+
+
+## Upgrade from v2 to v3
+
+- There is a new statistics parameter in QueryConfig. Now the executeQuery methods will also return a statistics object if the stats parameter is true.
+
+
+#### athenaNodeClient.executeQuery<T>()
+
+Before
+
+```ts
+const results = await athenaNodeClient.executeQuery<T>(query);
+
+```
+- V2 Response example:
+```json
+[
+  {
+    "result": "1"
+  },
+  {
+    "result": "2"
+  }
+]
+```
+
+After
+
+- If the statistics parameter is true, the method returns an object with results and statistics, otherwise it will return an array of objects.
+
+```ts
+const result = await athenaNodeClient.executeQuery<T>(query, {
+    stats: false
+});
+// OR
+const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
+    stats: true
+});
+```
+- V3 response example with stats false or without stats param:
+```json
+[
+    {
+      "result": "1"
+    },
+    {
+      "result": "2"
+    }
+]
+```
+
+```json
+{
+  "results": [
+    {
+      "result": "1"
+    },
+    {
+      "result": "2"
+    }
+  ],
+  "statistics": { 
+    "dataScannedInBytes": 26376236, 
+    "executionTimeInSeconds": 2.703
+  }
+}
+```
+
+
+#### athenaNodeClient.executeQueryAndGetS3Key<T>()
+
+Before
+
+```ts
+const {bucket, key} = await athenaNodeClient.executeQueryAndGetS3Key<T>(query);
+```
+- V2 Response example:
+```json
+{
+  "bucket": "bucket-test",
+  "key": "123-key.csv"
+}
+```
+
+After
+
+If the statistics parameter is true, the method returns an object with bucket, key and statistics, otherwise it will return an object with bucket and key.
+
+```ts
+const {bucket, key, statistics} = await athenaNodeClient.executeQueryAndGetS3Key<T>(query, {
+    stats: true | false
+});
+
+```
+- V3 response example with stats false or without stats param:
+```json
+{
+  "bucket": "bucket-test",
+  "key": "123-key.csv"
+}
+```
+
+- V3 response example with stats true:
+```json
+{
+  "bucket": "bucket-test",
+  "key": "123-key.csv",
+  "statistics": { 
+    "dataScannedInBytes": 26376236, 
+    "executionTimeInSeconds": 2.703
+  }
+}
+
+```
+
+
+#### athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>()
+
+Before
+
+```ts
+const url = await athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>(query);
+```
+- V2 response example:
+```json
+"https://bucket-test..."
+```
+
+After
+
+If the statistics parameter is true, the method returns an object with url and statistics, otherwise it will return an object with url.
+
+```ts
+const {url, statistics} = await athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>(query, {
+    stats: true | false
+});
+
+```
+- V3 response example with stats false or without stats param:
+```json
+{
+  "url": "https://bucket-test..."
+}
+```
+
+- V3 response example with stats true:
+```json
+{
+  "url": "https://bucket-test...",
+  "statistics": { 
+    "dataScannedInBytes": 26376236, 
+    "executionTimeInSeconds": 2.362
+  }
+
+}
+
+```
