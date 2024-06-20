@@ -382,7 +382,6 @@ const {url, statistics} = await athenaNodeClient.executeQueryAndGetDownloadSigne
     "dataScannedInBytes": 26376236, 
     "executionTimeInSeconds": 2.362
   }
-
 }
 
 ```
