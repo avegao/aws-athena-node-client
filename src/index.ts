@@ -92,7 +92,7 @@ export class AthenaNodeClient {
     public async executeQueryAndGetS3Key(sql: string, config?: QueryConfig): Promise<{
         bucket: string;
         key: string;
-        statistics: Statistics | undefined
+        statistics?: Statistics
     }> {
         const query = await this.executeQueryCommon(sql, config);
 
@@ -102,16 +102,21 @@ export class AthenaNodeClient {
 
         const [bucket, key] = query.s3Location.replace('s3://', '').split('/', 1);
 
-        return {
+        const returnObj = {
             bucket,
             key: `${key ?? ''}${query.athenaId}.csv`,
-            statistics: config?.stats ? await this.getQueryStatistics(query.athenaId as string) : undefined
-        };
+        }
+
+        if (config?.stats) {
+            Reflect.set(returnObj, 'statistics', await this.getQueryStatistics(query.athenaId as string))
+        }
+
+        return returnObj;
     }
 
     public async executeQueryAndGetDownloadSignedUrl(sql: string, config?: QueryWithResultsInS3Config): Promise<{
         url: string,
-        statistics: Statistics | undefined,
+        statistics?: Statistics,
     }> {
         if (this._config.s3Client == null) {
             throw new Error('[AthenaNodeClient] S3 Client is missing, you must install @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner dependencies and fill s3Client field in configuration');
@@ -123,13 +128,18 @@ export class AthenaNodeClient {
             Key: key,
         });
 
-        return {
-            statistics: statistics,
+        const returnObj = {
             url: await getSignedUrl(this._config.s3Client, command,
                 {
                     expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
                 })
         }
+
+        if (statistics != null) {
+            Reflect.set(returnObj, 'statistics', statistics)
+        }
+
+        return returnObj
     }
 
     /**
@@ -267,17 +277,13 @@ export class AthenaNodeClient {
         });
 
         const response = await this._client.send(input);
-        const bytes = response?.QueryExecution?.Statistics?.DataScannedInBytes ?? null;
+        const bytes = response?.QueryExecution?.Statistics?.DataScannedInBytes;
         const timeInSeconds = response?.QueryExecution?.Statistics?.EngineExecutionTimeInMillis ?? 0 / 1000
 
-        const stats = new Statistics();
-
-        if (bytes != null) {
-            stats.dataScannedInBytes = bytes;
-            stats.executionTimeInSeconds = timeInSeconds;
-        }
-
-        return stats;
+        return {
+            dataScannedInBytes: bytes,
+            executionTimeInSeconds: timeInSeconds,
+        };
     }
 
     private parseRow<T extends object>(row: Row, columns: Column[]): T {
