@@ -1,4 +1,4 @@
-export class Statistics {
-    public dataScannedInBytes: number | undefined;
-    public executionTimeInSeconds: number | undefined;
+export interface Statistics {
+    readonly dataScannedInBytes?: number;
+    readonly executionTimeInSeconds?: number;
 }
