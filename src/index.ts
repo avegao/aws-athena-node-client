@@ -1,7 +1,7 @@
-import {AthenaClientConfig} from './AthenaClientConfig';
-import {Queue} from './Queue';
-import {Query} from './Query';
-import {Column, ColumnParse} from './Column';
+import {AthenaClientConfig} from './AthenaClientConfig.js';
+import {Queue} from './Queue.js';
+import {Query} from './Query.js';
+import {Column, ColumnParse} from './Column.js';
 import {
     AthenaClient as AwsAthenaClient,
     GetQueryExecutionCommand,
@@ -16,11 +16,11 @@ import {
     StopQueryExecutionInput,
 } from '@aws-sdk/client-athena';
 import {setInterval} from 'timers/promises';
-import {AthenaClientException} from './exception/AthenaClientException';
-import {QueryCanceledException} from './exception/QueryCanceledException';
+import {AthenaClientException} from './exception/AthenaClientException.js';
+import {QueryCanceledException} from './exception/QueryCanceledException.js';
 import {GetObjectCommand} from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
-import {Statistics} from "./Statistics";
+import {Statistics} from "./Statistics.js";
 
 const expiration1Day = 60 * 60 * 24;
 
