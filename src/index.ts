@@ -50,6 +50,7 @@ export interface QueryConfig {
     readonly id?: string;
     readonly parameters?: Record<string, unknown>;
     readonly cacheInMinutes?: number;
+    readonly stats?: boolean;
 }
 
 export interface QueryWithResultsInS3Config extends QueryConfig {
@@ -68,28 +69,31 @@ export class AthenaNodeClient {
         this._queue = new Queue();
     }
 
-    public async executeQuery<T extends object>(sql: string, config?: QueryConfig): Promise<T[]> {
-        const query = await this.executeQueryCommon<T>(sql, config);
-
-        return this.getQueryResults<T>(query);
-    }
-
-    public async executeQueryAndGetStats<T extends object>(sql: string, config?: QueryConfig): Promise<{
-        results: T[];
+    public async executeQuery<T extends object>(sql: string, config?: QueryConfig): Promise<{
+        results: T[],
         statistics: Statistics
-    }> {
+    } | T[]> {
         const query = await this.executeQueryCommon<T>(sql, config);
 
-        return {
-            results: await this.getQueryResults<T>(query),
-            statistics: await this.getQueryStatistics(query.athenaId as string)
-        };
+        const results = await this.getQueryResults<T>(query);
+        if (config?.stats) {
+            return {
+                results,
+                statistics: await this.getQueryStatistics(query.athenaId as string)
+            };
+        } else {
+            return this.getQueryResults<T>(query);
+        }
     }
 
     /**
      * Execute query in Athena and get S3 URL with CSV file
      */
-    public async executeQueryAndGetS3Key(sql: string, config?: QueryConfig): Promise<{ bucket: string; key: string }> {
+    public async executeQueryAndGetS3Key(sql: string, config?: QueryConfig): Promise<{
+        bucket: string;
+        key: string;
+        statistics: Statistics | undefined
+    }> {
         const query = await this.executeQueryCommon(sql, config);
 
         if (query.s3Location == null) {
@@ -101,23 +105,31 @@ export class AthenaNodeClient {
         return {
             bucket,
             key: `${key ?? ''}${query.athenaId}.csv`,
+            statistics: config?.stats ? await this.getQueryStatistics(query.athenaId as string) : undefined
         };
     }
 
-    public async executeQueryAndGetDownloadSignedUrl(sql: string, config?: QueryWithResultsInS3Config): Promise<string> {
+    public async executeQueryAndGetDownloadSignedUrl(sql: string, config?: QueryWithResultsInS3Config): Promise<{
+        url: string,
+        statistics: Statistics | undefined,
+    }> {
         if (this._config.s3Client == null) {
             throw new Error('[AthenaNodeClient] S3 Client is missing, you must install @aws-sdk/client-s3 and @aws-sdk/s3-request-presigner dependencies and fill s3Client field in configuration');
         }
 
-        const {bucket, key} = await this.executeQueryAndGetS3Key(sql, config);
+        const {bucket, key, statistics} = await this.executeQueryAndGetS3Key(sql, config);
         const command = new GetObjectCommand({
             Bucket: bucket,
             Key: key,
         });
 
-        return getSignedUrl(this._config.s3Client, command, {
-            expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
-        });
+        return {
+            statistics: statistics,
+            url: await getSignedUrl(this._config.s3Client, command,
+                {
+                    expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
+                })
+        }
     }
 
     /**
