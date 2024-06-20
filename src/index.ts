@@ -277,7 +277,7 @@ export class AthenaNodeClient {
 
         const response = await this._client.send(input);
         const bytes = response?.QueryExecution?.Statistics?.DataScannedInBytes;
-        const timeInSeconds = response?.QueryExecution?.Statistics?.EngineExecutionTimeInMillis ?? 0 / 1000
+        const timeInSeconds = (response?.QueryExecution?.Statistics?.EngineExecutionTimeInMillis ?? 0) / 1000
 
         return {
             dataScannedInBytes: bytes,
