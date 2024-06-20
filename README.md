@@ -282,6 +282,7 @@ const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
 ]
 ```
 
+- V3 response example with stats true:
 ```json
 {
   "results": [
