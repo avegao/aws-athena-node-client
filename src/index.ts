@@ -74,8 +74,8 @@ export class AthenaNodeClient {
         statistics: Statistics
     } | T[]> {
         const query = await this.executeQueryCommon<T>(sql, config);
-
         const results = await this.getQueryResults<T>(query);
+
         if (config?.stats) {
             return {
                 results,
