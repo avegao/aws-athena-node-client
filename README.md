@@ -233,14 +233,11 @@ const results = await athenaNodeClient.executeQuery<T>(query, {
 });
 ```
 
-
-
 ## Upgrade from v2 to v3
 
 - There is a new statistics parameter in QueryConfig. Now the executeQuery methods will also return a statistics object if the stats parameter is true.
 
-
-#### athenaNodeClient.executeQuery<T>()
+### athenaNodeClient.executeQuery<T>()
 
 Before
 
@@ -302,8 +299,7 @@ const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
 }
 ```
 
-
-#### athenaNodeClient.executeQueryAndGetS3Key<T>()
+### athenaNodeClient.executeQueryAndGetS3Key<T>()
 
 Before
 
@@ -349,8 +345,7 @@ const {bucket, key, statistics} = await athenaNodeClient.executeQueryAndGetS3Key
 
 ```
 
-
-#### athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>()
+### athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>()
 
 Before
 
