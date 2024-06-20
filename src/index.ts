@@ -71,7 +71,7 @@ export class AthenaNodeClient {
 
     public async executeQuery<T extends object>(sql: string, config?: QueryConfig): Promise<{
         results: T[],
-        statistics: Statistics
+        statistics?: Statistics
     } | T[]> {
         const query = await this.executeQueryCommon<T>(sql, config);
         const results = await this.getQueryResults<T>(query);
@@ -129,10 +129,9 @@ export class AthenaNodeClient {
         });
 
         const returnObj = {
-            url: await getSignedUrl(this._config.s3Client, command,
-                {
-                    expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
-                })
+            url: await getSignedUrl(this._config.s3Client, command, {
+                expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
+            })
         }
 
         if (statistics != null) {
