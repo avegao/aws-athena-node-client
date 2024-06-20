@@ -235,7 +235,7 @@ const results = await athenaNodeClient.executeQuery<T>(query, {
 
 ## Upgrade from v2 to v3
 
-- There is a new statistics parameter in QueryConfig. Now the executeQuery methods will also return a statistics object if the stats parameter is true.
+- There is a new statistics parameter in QueryConfig. Now the executeQuery methods will also return a statistics object if the stats parameter is true. By default stats value is false
 
 ### athenaNodeClient.executeQuery<T>()
 
