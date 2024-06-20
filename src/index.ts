@@ -1,7 +1,7 @@
-import {AthenaClientConfig} from './AthenaClientConfig.js';
-import {Queue} from './Queue.js';
-import {Query} from './Query.js';
-import {Column, ColumnParse} from './Column.js';
+import {AthenaClientConfig} from '../../../Weplan/aws-athena-node-client/src/AthenaClientConfig';
+import {Queue} from '../../../Weplan/aws-athena-node-client/src/Queue';
+import {Query} from '../../../Weplan/aws-athena-node-client/src/Query';
+import {Column, ColumnParse} from '../../../Weplan/aws-athena-node-client/src/Column';
 import {
     AthenaClient as AwsAthenaClient,
     GetQueryExecutionCommand,
@@ -16,10 +16,11 @@ import {
     StopQueryExecutionInput,
 } from '@aws-sdk/client-athena';
 import {setInterval} from 'timers/promises';
-import {AthenaClientException} from './exception/AthenaClientException.js';
-import {QueryCanceledException} from './exception/QueryCanceledException.js';
+import {AthenaClientException} from '../../../Weplan/aws-athena-node-client/src/exception/AthenaClientException';
+import {QueryCanceledException} from '../../../Weplan/aws-athena-node-client/src/exception/QueryCanceledException';
 import {GetObjectCommand} from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
+import {Statistics} from "../../../Weplan/aws-athena-node-client/src/Statistics";
 
 const expiration1Day = 60 * 60 * 24;
 
@@ -71,6 +72,18 @@ export class AthenaNodeClient {
         const query = await this.executeQueryCommon<T>(sql, config);
 
         return this.getQueryResults<T>(query);
+    }
+
+    public async executeQueryAndGetStats<T extends object>(sql: string, config?: QueryConfig): Promise<{
+        results: T[];
+        statistics: Statistics
+    }> {
+        const query = await this.executeQueryCommon<T>(sql, config);
+
+        return {
+            results: await this.getQueryResults<T>(query),
+            statistics: await this.getQueryStatistics(query.athenaId as string)
+        };
     }
 
     /**
@@ -222,6 +235,37 @@ export class AthenaNodeClient {
         }
 
         return query.results;
+    }
+
+
+    /**
+     * Get statistics from a query execution
+     *
+     * @private
+     * @template T
+     *
+     *
+     * @returns {Promise<T[]>} - parsed query result rows
+     * @memberof AthenaNodeClient
+     * @param {string} executionId
+     */
+    private async getQueryStatistics(executionId: string): Promise<Statistics> {
+        const input: GetQueryExecutionCommand = new GetQueryExecutionCommand({
+            QueryExecutionId: executionId
+        });
+
+        const response = await this._client.send(input);
+        const bytes = response?.QueryExecution?.Statistics?.DataScannedInBytes ?? null;
+        const timeInSeconds = response?.QueryExecution?.Statistics?.EngineExecutionTimeInMillis ?? 0 / 1000
+
+        const stats = new Statistics();
+
+        if (bytes != null) {
+            stats.dataScannedInBytes = bytes;
+            stats.executionTimeInSeconds = timeInSeconds;
+        }
+
+        return stats;
     }
 
     private parseRow<T extends object>(row: Row, columns: Column[]): T {
