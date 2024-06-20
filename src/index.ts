@@ -1,7 +1,7 @@
-import {AthenaClientConfig} from '../../../Weplan/aws-athena-node-client/src/AthenaClientConfig';
-import {Queue} from '../../../Weplan/aws-athena-node-client/src/Queue';
-import {Query} from '../../../Weplan/aws-athena-node-client/src/Query';
-import {Column, ColumnParse} from '../../../Weplan/aws-athena-node-client/src/Column';
+import {AthenaClientConfig} from './AthenaClientConfig';
+import {Queue} from './Queue';
+import {Query} from './Query';
+import {Column, ColumnParse} from './Column';
 import {
     AthenaClient as AwsAthenaClient,
     GetQueryExecutionCommand,
@@ -16,11 +16,11 @@ import {
     StopQueryExecutionInput,
 } from '@aws-sdk/client-athena';
 import {setInterval} from 'timers/promises';
-import {AthenaClientException} from '../../../Weplan/aws-athena-node-client/src/exception/AthenaClientException';
-import {QueryCanceledException} from '../../../Weplan/aws-athena-node-client/src/exception/QueryCanceledException';
+import {AthenaClientException} from './exception/AthenaClientException';
+import {QueryCanceledException} from './exception/QueryCanceledException';
 import {GetObjectCommand} from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
-import {Statistics} from "../../../Weplan/aws-athena-node-client/src/Statistics";
+import {Statistics} from "./Statistics";
 
 const expiration1Day = 60 * 60 * 24;
 
