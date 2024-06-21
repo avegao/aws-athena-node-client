@@ -133,17 +133,17 @@ export class AthenaNodeClient {
             Key: key,
         });
 
-        const returnObj = {
+        const response = {
             url: await getSignedUrl(this._config.s3Client, command, {
                 expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
             })
         }
 
         if (statistics != null) {
-            Reflect.set(returnObj, 'statistics', statistics)
+            Reflect.set(response, 'statistics', statistics)
         }
 
-        return returnObj
+        return response
     }
 
     /**
