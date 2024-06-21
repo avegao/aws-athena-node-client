@@ -272,14 +272,16 @@ const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
 ```
 - V3 response example with stats false or without stats param:
 ```json
-[
+{
+  "results": [
     {
       "result": "1"
     },
     {
       "result": "2"
     }
-]
+  ]
+}
 ```
 
 - V3 response example with stats true:

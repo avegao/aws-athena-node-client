@@ -76,14 +76,17 @@ export class AthenaNodeClient {
         const query = await this.executeQueryCommon<T>(sql, config);
         const results = await this.getQueryResults<T>(query);
 
-        if (config?.stats) {
-            return {
-                results,
-                statistics: await this.getQueryStatistics(query.athenaId as string)
-            };
-        } else {
-            return this.getQueryResults<T>(query);
+        const response = {
+            results,
         }
+
+        if (config?.stats) {
+            const statistics = await this.getQueryStatistics(query.athenaId as string);
+
+            Reflect.set(response, 'statistics', statistics);
+        }
+
+        return response
     }
 
     /**
@@ -102,16 +105,18 @@ export class AthenaNodeClient {
 
         const [bucket, key] = query.s3Location.replace('s3://', '').split('/', 1);
 
-        const returnObj = {
+        const response = {
             bucket,
             key: `${key ?? ''}${query.athenaId}.csv`,
         }
 
         if (config?.stats) {
-            Reflect.set(returnObj, 'statistics', await this.getQueryStatistics(query.athenaId as string))
+            const statistics = await this.getQueryStatistics(query.athenaId as string);
+
+            Reflect.set(response, 'statistics', statistics);
         }
 
-        return returnObj;
+        return response;
     }
 
     public async executeQueryAndGetDownloadSignedUrl(sql: string, config?: QueryWithResultsInS3Config): Promise<{
