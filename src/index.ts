@@ -143,7 +143,7 @@ export class AthenaNodeClient {
             Reflect.set(response, 'statistics', statistics)
         }
 
-        return response
+        return response;
     }
 
     /**
