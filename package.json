@@ -1,68 +1,68 @@
 {
-	"name": "aws-athena-node-client",
-	"version": "3.0.0",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/index.cjs"
-		}
-	},
-	"main": "./dist/index.cjs",
-	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"files": ["dist"],
-	"author": "Álvaro de la Vega Olmedilla <alvarodlvo@gmail.com>",
-	"engines": {
-		"node": ">=18.0.0"
-	},
-	"scripts": {
-		"build": "rslib build",
-		"check": "biome check --write",
-		"dev": "rslib build --watch",
-		"format": "biome format --write",
-		"test": "vitest run",
-		"coverage": "vitest run --coverage",
-		"prepublish": "rslib build"
-	},
-	"keywords": [
-		"aws",
-		"athena-client",
-		"amazon web services",
-		"athena",
-		"query",
-		"typescript",
-		"node",
-		"nodejs"
-	],
-	"license": "MIT",
-	"homepage": "https://github.com/avegao/aws-athena-node-client",
-	"repository": {
-		"type": "git",
-		"url": "git@github.com:avegao/aws-athena-node-client.git"
-	},
-	"bugs": "https://github.com/avegao/aws-athena-node-client/issues",
-	"devDependencies": {
-		"@aws-sdk/client-athena": "^3.600.0",
-		"@aws-sdk/client-s3": "^3.600.0",
-		"@aws-sdk/s3-request-presigner": "^3.600.0",
-		"@biomejs/biome": "^1.9.4",
-		"@rslib/core": "^0.4.1",
-		"@types/lodash-es": "^4.17.12",
-		"@types/node": "^20.14.6",
-		"@vitest/coverage-v8": "^1.6.0",
-		"typescript": "^5.4.5",
-		"vitest": "^1.6.0"
-	},
-	"dependencies": {
-		"destr": "^2.0.3",
-		"lodash-es": "^4.17.21",
-		"pg-promise": "^11.8.0"
-	},
-	"peerDependencies": {
-		"@aws-sdk/client-athena": "^3.533.0",
-		"@aws-sdk/client-s3": "^3.533.0",
-		"@aws-sdk/s3-request-presigner": "^3.533.0"
-	}
+    "name": "aws-athena-node-client",
+    "version": "3.0.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": ["dist"],
+    "author": "Álvaro de la Vega Olmedilla <alvarodlvo@gmail.com>",
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "scripts": {
+        "build": "rslib build",
+        "check": "biome check --write",
+        "dev": "rslib build --watch",
+        "format": "biome format --write",
+        "test": "vitest run",
+        "coverage": "vitest run --coverage",
+        "prepublish": "rslib build"
+    },
+    "keywords": [
+        "aws",
+        "athena-client",
+        "amazon web services",
+        "athena",
+        "query",
+        "typescript",
+        "node",
+        "nodejs"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/avegao/aws-athena-node-client",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:avegao/aws-athena-node-client.git"
+    },
+    "bugs": "https://github.com/avegao/aws-athena-node-client/issues",
+    "devDependencies": {
+        "@aws-sdk/client-athena": "^3.600.0",
+        "@aws-sdk/client-s3": "^3.600.0",
+        "@aws-sdk/s3-request-presigner": "^3.600.0",
+        "@biomejs/biome": "^1.9.4",
+        "@rslib/core": "^0.4.1",
+        "@types/lodash-es": "^4.17.12",
+        "@types/node": "^20.14.6",
+        "@vitest/coverage-v8": "^1.6.0",
+        "typescript": "^5.4.5",
+        "vitest": "^1.6.0"
+    },
+    "dependencies": {
+        "destr": "^2.0.3",
+        "lodash-es": "^4.17.21",
+        "pg-promise": "^11.8.0"
+    },
+    "peerDependencies": {
+        "@aws-sdk/client-athena": "^3.533.0",
+        "@aws-sdk/client-s3": "^3.533.0",
+        "@aws-sdk/s3-request-presigner": "^3.533.0"
+    }
 }
