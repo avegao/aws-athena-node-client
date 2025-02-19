@@ -48,13 +48,13 @@ export class Column {
      */
     public static parseBoolean(value: string): boolean {
         return (
-            value === 'true'
-            || value === 'TRUE'
-            || value === 't'
-            || value === 'T'
-            || value === 'yes'
-            || value === 'YES'
-            || value === '1'
+            value === 'true' ||
+            value === 'TRUE' ||
+            value === 't' ||
+            value === 'T' ||
+            value === 'yes' ||
+            value === 'YES' ||
+            value === '1'
         );
     }
 

@@ -1,28 +1,15 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Node 18",
-  "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "incremental": true,
-    "emitDecoratorMetadata": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true,
-    "lib": ["ES2020"],
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "outDir": "./dist",
-    "removeComments": true,
-    "sourceMap": true,
-    "skipLibCheck": true,
-    "target": "ES2020",
-    "strict": true
-  },
-  "include": [
-    "./src/**/*.ts"
-  ],
-  "exclude": [
-    "test"
-  ]
+    "compilerOptions": {
+        "lib": ["ES2021"],
+        "module": "ESNext",
+        "noEmit": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "isolatedModules": true,
+        "resolveJsonModule": true,
+        "moduleResolution": "bundler",
+        "useDefineForClassFields": true,
+        "allowImportingTsExtensions": true
+    },
+    "include": ["src"]
 }

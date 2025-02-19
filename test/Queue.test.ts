@@ -1,6 +1,6 @@
-import {beforeEach, describe, expect, test} from 'vitest';
-import {Queue} from '../src/Queue.js';
-import {Query} from '../src/Query.js';
+import { beforeEach, describe, expect, test } from 'vitest';
+import { Queue } from '../src/Queue.js';
+import { Query } from '../src/Query.js';
 
 describe('queue', () => {
     let queue: Queue;
@@ -56,7 +56,9 @@ describe('queue', () => {
         expect(queue.queries.length).toBe(1);
         expect(queue.queries[0]).toBe(query);
 
-        expect(() => queue.getQueryById('ab')).toThrowError('Query ID not found');
+        expect(() => queue.getQueryById('ab')).toThrowError(
+            'Query ID not found',
+        );
 
         expect(queue.queries.length).toBe(1);
         expect(queue.queries[0]).toBe(query);

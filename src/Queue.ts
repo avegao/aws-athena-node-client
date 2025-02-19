@@ -1,5 +1,5 @@
-import {Query} from './Query.js';
-import {isEmpty} from 'lodash-es';
+import { Query } from './Query.js';
+import { isEmpty } from 'lodash-es';
 
 export class Queue {
     public queries: Query<unknown>[] = [];

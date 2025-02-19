@@ -1,4 +1,4 @@
-import {AthenaClientException} from './AthenaClientException.js';
+import { AthenaClientException } from './AthenaClientException.js';
 
 export class QueryCanceledException extends AthenaClientException {
     public constructor() {

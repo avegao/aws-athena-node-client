@@ -1,3 +1,1 @@
-export class AthenaClientException extends Error {
-
-}
+export class AthenaClientException extends Error {}
