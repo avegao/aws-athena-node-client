@@ -73,7 +73,7 @@ export class AthenaNodeClient {
         sql: string,
         config?: QueryConfig,
     ): Promise<{
-        id: string,
+        id: string;
         results: T[];
         statistics?: Statistics;
     }> {
@@ -103,7 +103,7 @@ export class AthenaNodeClient {
         sql: string,
         config?: QueryConfig,
     ): Promise<{
-        id: string,
+        id: string;
         bucket: string;
         key: string;
         statistics?: Statistics;
@@ -139,7 +139,7 @@ export class AthenaNodeClient {
         sql: string,
         config?: QueryWithResultsInS3Config,
     ): Promise<{
-        id: string,
+        id: string;
         url: string;
         statistics?: Statistics;
     }> {
@@ -149,10 +149,8 @@ export class AthenaNodeClient {
             );
         }
 
-        const {bucket, key, statistics, id} = await this.executeQueryAndGetS3Key(
-            sql,
-            config,
-        );
+        const { bucket, key, statistics, id } =
+            await this.executeQueryAndGetS3Key(sql, config);
         const command = new GetObjectCommand({
             Bucket: bucket,
             Key: key,
