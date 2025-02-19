@@ -273,6 +273,7 @@ const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
 - V3 response example with stats false or without stats param:
 ```json
 {
+  "id": "id",
   "results": [
     {
       "result": "1"
@@ -287,6 +288,7 @@ const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
 - V3 response example with stats true:
 ```json
 {
+  "id": "id",
   "results": [
     {
       "result": "1"
@@ -330,6 +332,7 @@ const {bucket, key, statistics} = await athenaNodeClient.executeQueryAndGetS3Key
 - V3 response example with stats false or without stats param:
 ```json
 {
+  "id": "id",
   "bucket": "bucket-test",
   "key": "123-key.csv"
 }
@@ -338,6 +341,7 @@ const {bucket, key, statistics} = await athenaNodeClient.executeQueryAndGetS3Key
 - V3 response example with stats true:
 ```json
 {
+  "id": "id",
   "bucket": "bucket-test",
   "key": "123-key.csv",
   "statistics": { 
@@ -373,6 +377,7 @@ const {url, statistics} = await athenaNodeClient.executeQueryAndGetDownloadSigne
 - V3 response example with stats false or without stats param:
 ```json
 {
+  "id": "id",
   "url": "https://bucket-test..."
 }
 ```
@@ -380,6 +385,7 @@ const {url, statistics} = await athenaNodeClient.executeQueryAndGetDownloadSigne
 - V3 response example with stats true:
 ```json
 {
+  "id": "id",
   "url": "https://bucket-test...",
   "statistics": { 
     "dataScannedInBytes": 26376236, 
