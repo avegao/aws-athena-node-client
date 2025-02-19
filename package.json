@@ -1,6 +1,6 @@
 {
     "name": "aws-athena-node-client",
-    "version": "3.0.0",
+    "version": "4.0.0",
     "type": "module",
     "exports": {
         ".": {
@@ -12,7 +12,9 @@
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "files": ["dist"],
+    "files": [
+        "dist"
+    ],
     "author": "Álvaro de la Vega Olmedilla <alvarodlvo@gmail.com>",
     "engines": {
         "node": ">=18.0.0"
