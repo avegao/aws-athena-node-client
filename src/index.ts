@@ -1,21 +1,19 @@
 import { AthenaClientConfig } from './AthenaClientConfig.js';
 import { Queue } from './Queue.js';
 import { Query } from './Query.js';
-import { Column, ColumnParse } from './Column.js';
+import { ResultObjectParser } from './ResultParser.js';
 import {
     AthenaClient as AwsAthenaClient,
     GetQueryExecutionCommand,
     GetQueryExecutionInput,
     GetQueryResultsCommand,
     GetQueryResultsInput,
-    ResultSet,
-    Row,
+    type ResultSet,
     StartQueryExecutionCommand,
     StartQueryExecutionCommandInput,
     StopQueryExecutionCommand,
     StopQueryExecutionInput,
 } from '@aws-sdk/client-athena';
-import { setInterval } from 'timers/promises';
 import { AthenaClientException } from './exception/AthenaClientException.js';
 import { QueryCanceledException } from './exception/QueryCanceledException.js';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
@@ -23,28 +21,6 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Statistics } from './Statistics.js';
 
 const expiration1Day = 60 * 60 * 24;
-
-enum AthenaDataTypeEnum {
-    Integer = 'integer',
-    Float = 'float',
-    Double = 'double',
-    Decimal = 'decimal',
-    Char = 'char',
-    Varchar = 'varchar',
-    Boolean = 'boolean',
-    Binary = 'binary',
-    Date = 'date',
-    Timestamp = 'timestamp',
-    TimestampWithTz = 'timestamp with time zone',
-    Array = 'array',
-    Json = 'json',
-    Map = 'map',
-    String = 'string',
-    Struct = 'struct',
-    TinyInt = 'tinyint',
-    SmallInt = 'smallint',
-    BigInt = 'bigint',
-}
 
 export interface QueryConfig {
     readonly id?: string;
@@ -55,6 +31,12 @@ export interface QueryConfig {
 
 export interface QueryWithResultsInS3Config extends QueryConfig {
     s3LinkExpirationInSeconds?: number;
+}
+
+export interface QueryStream<T extends object> {
+    readonly id: string;
+    readonly rows: AsyncGenerator<T>;
+    readonly statistics?: Statistics;
 }
 
 export class AthenaNodeClient {
@@ -91,6 +73,31 @@ export class AthenaNodeClient {
             );
 
             Reflect.set(response, 'statistics', statistics);
+        }
+
+        return response;
+    }
+
+    /**
+     * Execute query in Athena and iterate parsed rows without materializing the full result array.
+     */
+    public async executeQueryStream<T extends object>(
+        sql: string,
+        config?: QueryConfig,
+    ): Promise<QueryStream<T>> {
+        const query = await this.executeQueryCommon<T>(sql, config);
+        const response: QueryStream<T> = {
+            id: query.athenaId as string,
+            rows: this.getQueryResultsStream(query),
+        };
+
+        if (config?.stats) {
+            return {
+                ...response,
+                statistics: await this.getQueryStatistics(
+                    query.athenaId as string,
+                ),
+            };
         }
 
         return response;
@@ -211,6 +218,8 @@ export class AthenaNodeClient {
             throw exception;
         }
 
+        this._queue.removeQuery(query);
+
         return query;
     }
 
@@ -273,46 +282,89 @@ export class AthenaNodeClient {
      */
     private async getQueryResults<T extends object>(
         query: Query<T>,
-        nextToken?: string,
     ): Promise<T[]> {
+        let nextToken: string | undefined;
+        let isFirstPage = true;
+
+        do {
+            const { nextToken: responseNextToken, resultSet } =
+                await this.getQueryResultsPage(query.athenaId as string, nextToken);
+
+            if (query.resultParser == null) {
+                query.resultParser = new ResultObjectParser(resultSet);
+                query.columns = query.resultParser.columns;
+            }
+
+            query.resultParser.appendRows(
+                query.results,
+                resultSet.Rows ?? [],
+                isFirstPage,
+            );
+
+            nextToken = responseNextToken;
+            isFirstPage = false;
+        } while (nextToken != null);
+
+        return query.results;
+    }
+
+    private async *getQueryResultsStream<T extends object>(
+        query: Query<T>,
+    ): AsyncGenerator<T> {
+        let nextToken: string | undefined;
+        let isFirstPage = true;
+
+        do {
+            const { nextToken: responseNextToken, resultSet } =
+                await this.getQueryResultsPage(query.athenaId as string, nextToken);
+
+            if (query.resultParser == null) {
+                query.resultParser = new ResultObjectParser(resultSet);
+                query.columns = query.resultParser.columns;
+            }
+
+            const rows = resultSet.Rows ?? [];
+
+            for (
+                let rowIndex = isFirstPage ? 1 : 0;
+                rowIndex < rows.length;
+                rowIndex++
+            ) {
+                yield query.resultParser.parseRow(rows[rowIndex]);
+            }
+
+            nextToken = responseNextToken;
+            isFirstPage = false;
+        } while (nextToken != null);
+    }
+
+    private async getQueryResultsPage(
+        queryExecutionId: string,
+        nextToken?: string,
+    ): Promise<{
+        readonly nextToken?: string;
+        readonly resultSet: ResultSet;
+    }> {
         const input: GetQueryResultsInput = {
             NextToken: nextToken,
-            QueryExecutionId: query.athenaId,
+            QueryExecutionId: queryExecutionId,
         };
 
         const response = await this._client.send(
             new GetQueryResultsCommand(input),
         );
-        const results = response.ResultSet;
+        const resultSet = response.ResultSet;
 
-        if (results == null) {
+        if (resultSet == null) {
             throw new Error(
                 '[AthenaNodeClient] No query results. This may be a problem in AWS side.',
             );
         }
 
-        if (!query.hasColumns()) {
-            query.columns = this.setColumnParsers(results);
-        }
-
-        const isFirstPage = !query.hasResults() && nextToken == null;
-
-        query.results.push(
-            ...this.parseRows<T>(
-                results.Rows ?? [],
-                query.columns,
-                isFirstPage,
-            ),
-        );
-
-        if (response.NextToken != null) {
-            query.results = await this.getQueryResults<T>(
-                query,
-                response.NextToken,
-            );
-        }
-
-        return query.results;
+        return {
+            nextToken: response.NextToken,
+            resultSet,
+        };
     }
 
     /**
@@ -343,101 +395,6 @@ export class AthenaNodeClient {
         };
     }
 
-    private parseRow<T extends object>(row: Row, columns: Column[]): T {
-        const result = {} as T;
-        const dataLength = row.Data?.length ?? 0;
-
-        for (let rowDataIndex = 0; rowDataIndex < dataLength; rowDataIndex++) {
-            const rowData = row.Data?.[rowDataIndex];
-            const column = columns[rowDataIndex];
-            const columnName = column.name;
-
-            let value: unknown | null = null;
-
-            if (rowData?.VarCharValue != null) {
-                value = column.parse(rowData.VarCharValue);
-            }
-
-            Reflect.set(result, columnName, value);
-        }
-
-        return result;
-    }
-
-    private parseRows<T extends object>(
-        rows: Row[],
-        columns: Column[],
-        isFirstPage = false,
-    ): T[] {
-        const results: T[] = [];
-
-        // Start with 1 when first line is column title (in first page)
-        for (
-            let rowIndex = isFirstPage ? 1 : 0, len = rows.length;
-            rowIndex < len;
-            rowIndex++
-        ) {
-            const row = rows[rowIndex];
-
-            results.push(this.parseRow(row, columns));
-        }
-
-        return results;
-    }
-
-    private setColumnParsers(results: ResultSet): Column[] {
-        return (
-            results.ResultSetMetadata?.ColumnInfo?.map((columnInfo, index) => {
-                const name = columnInfo.Name ?? `column_${index}`;
-                let parse: ColumnParse;
-
-                switch (columnInfo.Type as AthenaDataTypeEnum) {
-                    case AthenaDataTypeEnum.Integer:
-                    case AthenaDataTypeEnum.TinyInt:
-                    case AthenaDataTypeEnum.SmallInt:
-                    case AthenaDataTypeEnum.BigInt:
-                    case AthenaDataTypeEnum.Float:
-                    case AthenaDataTypeEnum.Double:
-                    case AthenaDataTypeEnum.Decimal:
-                        parse = Column.parseNumber;
-                        break;
-
-                    case AthenaDataTypeEnum.Char:
-                    case AthenaDataTypeEnum.Varchar:
-                    case AthenaDataTypeEnum.String:
-                        parse = Column.parseString;
-                        break;
-
-                    case AthenaDataTypeEnum.Boolean:
-                        parse = Column.parseBoolean;
-                        break;
-
-                    case AthenaDataTypeEnum.Date:
-                    case AthenaDataTypeEnum.Timestamp:
-                    case AthenaDataTypeEnum.TimestampWithTz:
-                        parse = Column.parseDate;
-                        break;
-
-                    case AthenaDataTypeEnum.Array:
-                        parse = Column.parseArray;
-                        break;
-                    case AthenaDataTypeEnum.Json:
-                        parse = Column.parseJson;
-                        break;
-                    case AthenaDataTypeEnum.Binary:
-                    case AthenaDataTypeEnum.Map:
-                    case AthenaDataTypeEnum.Struct:
-                    default:
-                        throw new Error(
-                            `Column type '${columnInfo.Type}' not supported`,
-                        );
-                }
-
-                return new Column(name, parse);
-            }) ?? []
-        );
-    }
-
     /**
      * Checks the query execution status until the query sends SUCCEEDED signal
      *
@@ -453,7 +410,9 @@ export class AthenaNodeClient {
 
         const waitTime = this._config.waitTimeInSeconds * 1000;
 
-        for await (const _ of setInterval(waitTime)) {
+        while (true) {
+            await this.sleep(waitTime);
+
             const response = await this._client.send(
                 new GetQueryExecutionCommand(input),
             );
@@ -478,5 +437,11 @@ export class AthenaNodeClient {
                     );
             }
         }
+    }
+
+    private async sleep(milliseconds: number): Promise<void> {
+        await new Promise((resolve) => {
+            setTimeout(resolve, milliseconds);
+        });
     }
 }

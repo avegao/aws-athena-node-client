@@ -1,7 +1,8 @@
-// @ts-ignore
+// @ts-expect-error - pg-promise does not publish typings for this internal formatter path.
 import { formatQuery } from 'pg-promise/lib/formatting.js';
 import { Column } from './Column.js';
 import { type QueryExecutionState } from '@aws-sdk/client-athena';
+import { type ResultObjectParser } from './ResultParser.js';
 
 export class Query<T> {
     public id?: string;
@@ -13,6 +14,7 @@ export class Query<T> {
     public waitTime: number;
     public results: T[] = [];
     public columns: Column[];
+    public resultParser?: ResultObjectParser;
     public cacheInMinutes?: number;
     public s3Location?: string;
 

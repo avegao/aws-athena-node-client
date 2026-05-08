@@ -3,13 +3,10 @@ import destr from 'destr';
 export type ColumnParse = (value: string) => unknown;
 
 export class Column {
-    public name: string;
-    public parse: (value: string) => unknown;
-
-    public constructor(name: string, parse: ColumnParse) {
-        this.name = name;
-        this.parse = parse;
-    }
+    public constructor(
+        public readonly name: string,
+        public readonly parse: ColumnParse,
+    ) {}
 
     /**
      * Parses string to number
@@ -47,15 +44,19 @@ export class Column {
      * @returns {boolean} - parsed string
      */
     public static parseBoolean(value: string): boolean {
-        return (
-            value === 'true' ||
-            value === 'TRUE' ||
-            value === 't' ||
-            value === 'T' ||
-            value === 'yes' ||
-            value === 'YES' ||
-            value === '1'
-        );
+        switch (value) {
+            case '1':
+            case 'T':
+            case 'TRUE':
+            case 'YES':
+            case 't':
+            case 'true':
+            case 'yes':
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     /**
@@ -77,26 +78,23 @@ export class Column {
      * @returns {any[]} - parsed array
      */
     public static parseArray(arrayInString: string): number[] | string[] {
-        arrayInString = arrayInString.replace(/[\[\]]/gi, '');
+        const normalizedArray = arrayInString.replace(/[\[\]]/g, '');
 
-        if (arrayInString == null || arrayInString === '') {
+        if (normalizedArray === '') {
             return [];
         }
 
-        const values = arrayInString.split(', ');
-        const result: number[] | string[] = [];
+        const values = normalizedArray.split(', ');
+        const result = new Array<number | string>(values.length);
 
-        for (const value of values) {
-            let numberValue = Number(value);
+        for (let index = 0; index < values.length; index++) {
+            const value = values[index] as string;
+            const numberValue = Number(value);
 
-            if (!Number.isNaN(numberValue)) {
-                result.push(numberValue as never);
-            } else {
-                result.push(value as never);
-            }
+            result[index] = Number.isNaN(numberValue) ? value : numberValue;
         }
 
-        return result;
+        return result as number[] | string[];
     }
 
     /**

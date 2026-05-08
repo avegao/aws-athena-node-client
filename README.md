@@ -1,5 +1,7 @@
 # AWS Athena Client for NodeJS
 
+Requires Node.js 24 LTS or newer, or Bun 1.1+.
+
 ## Installation
 
 Using NPM:
@@ -19,6 +21,26 @@ Using pnpm:
 ```shell
 pnpm add aws-athena-node-client @aws-sdk/client-athena
 ```
+
+Using bun:
+
+```shell
+bun add aws-athena-node-client @aws-sdk/client-athena
+```
+
+## Development
+
+Run the parser benchmark with the representative `10 columns x 7000 rows` fixture:
+
+```shell
+pnpm benchmark:parse
+```
+
+You can override the dataset size or iteration count with `PARSE_BENCH_ROWS` and
+`PARSE_BENCH_ITERATIONS`.
+
+If you want forced garbage collection during the benchmark, run it with Node.js
+and `--expose-gc` manually.
 
 ## Use
 
@@ -44,6 +66,28 @@ try {
 } catch (error) {
   console.error(error);
 }
+```
+
+#### Stream query rows
+
+Use this method when you want to process large result sets without keeping the
+full `results` array in memory.
+
+```ts
+const query = `SELECT id, name FROM users`;
+
+const { id, rows, statistics } = await athenaNodeClient.executeQueryStream<{
+  id: number;
+  name: string;
+}>(query, {
+  stats: true,
+});
+
+for await (const row of rows) {
+  console.log(id, row.name);
+}
+
+console.log(statistics);
 ```
 
 #### Cache
