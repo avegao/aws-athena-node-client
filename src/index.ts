@@ -1,26 +1,29 @@
-import { AthenaClientConfig } from './AthenaClientConfig.js';
-import { Queue } from './Queue.js';
-import { Query } from './Query.js';
-import { ResultObjectParser } from './ResultParser.js';
 import {
-    AthenaClient as AwsAthenaClient,
     GetQueryExecutionCommand,
-    GetQueryExecutionInput,
     GetQueryResultsCommand,
-    GetQueryResultsInput,
-    type ResultSet,
     StartQueryExecutionCommand,
-    StartQueryExecutionCommandInput,
     StopQueryExecutionCommand,
-    StopQueryExecutionInput,
 } from '@aws-sdk/client-athena';
-import { AthenaClientException } from './exception/AthenaClientException.js';
-import { QueryCanceledException } from './exception/QueryCanceledException.js';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { Statistics } from './Statistics.js';
+import type {
+    GetQueryExecutionInput,
+    GetQueryResultsInput,
+    ResultSet,
+    StartQueryExecutionCommandInput,
+    StopQueryExecutionInput,
+    AthenaClient as AwsAthenaClient,
+} from '@aws-sdk/client-athena';
+import {GetObjectCommand} from '@aws-sdk/client-s3';
+import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
 
-const expiration1Day = 60 * 60 * 24;
+import type {AthenaClientConfig} from './AthenaClientConfig.js';
+import {AthenaClientException} from './exception/AthenaClientException.js';
+import {QueryCanceledException} from './exception/QueryCanceledException.js';
+import {Query} from './Query.js';
+import {Queue} from './Queue.js';
+import {ResultObjectParser} from './ResultParser.js';
+import type {Statistics} from './Statistics.js';
+
+const EXPIRATION_1_DAY = 60 * 60 * 24;
 
 export interface QueryConfig {
     readonly id?: string;
@@ -43,7 +46,7 @@ export class AthenaNodeClient {
     private readonly _client: AwsAthenaClient;
     private readonly _config: AthenaClientConfig;
 
-    private _queue: Queue;
+    private readonly _queue: Queue;
 
     public constructor(client: AwsAthenaClient, config: AthenaClientConfig) {
         this._client = client;
@@ -68,9 +71,7 @@ export class AthenaNodeClient {
         };
 
         if (config?.stats) {
-            const statistics = await this.getQueryStatistics(
-                query.athenaId as string,
-            );
+            const statistics = await this.getQueryStatistics(query.athenaId as string);
 
             Reflect.set(response, 'statistics', statistics);
         }
@@ -81,10 +82,7 @@ export class AthenaNodeClient {
     /**
      * Execute query in Athena and iterate parsed rows without materializing the full result array.
      */
-    public async executeQueryStream<T extends object>(
-        sql: string,
-        config?: QueryConfig,
-    ): Promise<QueryStream<T>> {
+    public async executeQueryStream<T extends object>(sql: string, config?: QueryConfig): Promise<QueryStream<T>> {
         const query = await this.executeQueryCommon<T>(sql, config);
         const response: QueryStream<T> = {
             id: query.athenaId as string,
@@ -94,9 +92,7 @@ export class AthenaNodeClient {
         if (config?.stats) {
             return {
                 ...response,
-                statistics: await this.getQueryStatistics(
-                    query.athenaId as string,
-                ),
+                statistics: await this.getQueryStatistics(query.athenaId as string),
             };
         }
 
@@ -121,9 +117,7 @@ export class AthenaNodeClient {
             throw new Error('Athena no returns results S3 url');
         }
 
-        const [bucket, key] = query.s3Location
-            .replace('s3://', '')
-            .split('/', 1);
+        const [bucket, key] = query.s3Location.replace('s3://', '').split('/', 1);
 
         const response = {
             bucket,
@@ -132,9 +126,7 @@ export class AthenaNodeClient {
         };
 
         if (config?.stats) {
-            const statistics = await this.getQueryStatistics(
-                query.athenaId as string,
-            );
+            const statistics = await this.getQueryStatistics(query.athenaId as string);
 
             Reflect.set(response, 'statistics', statistics);
         }
@@ -156,8 +148,7 @@ export class AthenaNodeClient {
             );
         }
 
-        const { bucket, key, statistics, id } =
-            await this.executeQueryAndGetS3Key(sql, config);
+        const {bucket, key, statistics, id} = await this.executeQueryAndGetS3Key(sql, config);
         const command = new GetObjectCommand({
             Bucket: bucket,
             Key: key,
@@ -165,7 +156,7 @@ export class AthenaNodeClient {
 
         const response = {
             url: await getSignedUrl(this._config.s3Client, command, {
-                expiresIn: config?.s3LinkExpirationInSeconds ?? expiration1Day,
+                expiresIn: config?.s3LinkExpirationInSeconds ?? EXPIRATION_1_DAY,
             }),
             id,
         };
@@ -195,16 +186,8 @@ export class AthenaNodeClient {
         await this._client.send(new StopQueryExecutionCommand(input));
     }
 
-    private async executeQueryCommon<T>(
-        sql: string,
-        config?: QueryConfig,
-    ): Promise<Query<T>> {
-        const query = new Query<T>(
-            sql,
-            this._config.waitTimeInSeconds,
-            config?.parameters,
-            config?.id,
-        );
+    private async executeQueryCommon<T>(sql: string, config?: QueryConfig): Promise<Query<T>> {
+        const query = new Query<T>(sql, this._config.waitTimeInSeconds, config?.parameters, config?.id);
 
         this._queue.addQuery(query);
 
@@ -246,7 +229,7 @@ export class AthenaNodeClient {
             input.WorkGroup = this._config.workGroup;
         }
 
-        if (query.cacheInMinutes ?? 0 > 0) {
+        if ((query.cacheInMinutes ?? 0) > 0) {
             input.ResultReuseConfiguration = {
                 ResultReuseByAgeConfiguration: {
                     Enabled: true,
@@ -255,17 +238,13 @@ export class AthenaNodeClient {
             };
         }
 
-        const response = await this._client.send(
-            new StartQueryExecutionCommand(input),
-        );
+        const response = await this._client.send(new StartQueryExecutionCommand(input));
 
         if (response.QueryExecutionId != null) {
             return response.QueryExecutionId;
-        } else {
-            throw new Error(
-                '[AthenaNodeClient] Athena no returns query execution id. This may be a problem in AWS side.',
-            );
         }
+
+        throw new Error('[AthenaNodeClient] Athena no returns query execution id. This may be a problem in AWS side.');
     }
 
     /**
@@ -275,31 +254,26 @@ export class AthenaNodeClient {
      * @template T
      *
      * @param {Query<T>} query
-     * @param {string} nextToken
      *
      * @returns {Promise<T[]>} - parsed query result rows
      * @memberof AthenaNodeClient
      */
-    private async getQueryResults<T extends object>(
-        query: Query<T>,
-    ): Promise<T[]> {
+    private async getQueryResults<T extends object>(query: Query<T>): Promise<T[]> {
         let nextToken: string | undefined;
         let isFirstPage = true;
 
         do {
-            const { nextToken: responseNextToken, resultSet } =
-                await this.getQueryResultsPage(query.athenaId as string, nextToken);
+            const {nextToken: responseNextToken, resultSet} = await this.getQueryResultsPage(
+                query.athenaId as string,
+                nextToken,
+            );
 
             if (query.resultParser == null) {
                 query.resultParser = new ResultObjectParser(resultSet);
                 query.columns = query.resultParser.columns;
             }
 
-            query.resultParser.appendRows(
-                query.results,
-                resultSet.Rows ?? [],
-                isFirstPage,
-            );
+            query.resultParser.appendRows(query.results, resultSet.Rows ?? [], isFirstPage);
 
             nextToken = responseNextToken;
             isFirstPage = false;
@@ -308,15 +282,15 @@ export class AthenaNodeClient {
         return query.results;
     }
 
-    private async *getQueryResultsStream<T extends object>(
-        query: Query<T>,
-    ): AsyncGenerator<T> {
+    private async *getQueryResultsStream<T extends object>(query: Query<T>): AsyncGenerator<T> {
         let nextToken: string | undefined;
         let isFirstPage = true;
 
         do {
-            const { nextToken: responseNextToken, resultSet } =
-                await this.getQueryResultsPage(query.athenaId as string, nextToken);
+            const {nextToken: responseNextToken, resultSet} = await this.getQueryResultsPage(
+                query.athenaId as string,
+                nextToken,
+            );
 
             if (query.resultParser == null) {
                 query.resultParser = new ResultObjectParser(resultSet);
@@ -325,11 +299,7 @@ export class AthenaNodeClient {
 
             const rows = resultSet.Rows ?? [];
 
-            for (
-                let rowIndex = isFirstPage ? 1 : 0;
-                rowIndex < rows.length;
-                rowIndex++
-            ) {
+            for (let rowIndex = isFirstPage ? 1 : 0; rowIndex < rows.length; rowIndex++) {
                 yield query.resultParser.parseRow(rows[rowIndex]);
             }
 
@@ -350,15 +320,11 @@ export class AthenaNodeClient {
             QueryExecutionId: queryExecutionId,
         };
 
-        const response = await this._client.send(
-            new GetQueryResultsCommand(input),
-        );
+        const response = await this._client.send(new GetQueryResultsCommand(input));
         const resultSet = response.ResultSet;
 
         if (resultSet == null) {
-            throw new Error(
-                '[AthenaNodeClient] No query results. This may be a problem in AWS side.',
-            );
+            throw new Error('[AthenaNodeClient] No query results. This may be a problem in AWS side.');
         }
 
         return {
@@ -385,9 +351,7 @@ export class AthenaNodeClient {
 
         const response = await this._client.send(input);
         const bytes = response?.QueryExecution?.Statistics?.DataScannedInBytes;
-        const timeInSeconds =
-            (response?.QueryExecution?.Statistics
-                ?.EngineExecutionTimeInMillis ?? 0) / 1000;
+        const timeInSeconds = (response?.QueryExecution?.Statistics?.EngineExecutionTimeInMillis ?? 0) / 1000;
 
         return {
             dataScannedInBytes: bytes,
@@ -413,15 +377,12 @@ export class AthenaNodeClient {
         while (true) {
             await this.sleep(waitTime);
 
-            const response = await this._client.send(
-                new GetQueryExecutionCommand(input),
-            );
+            const response = await this._client.send(new GetQueryExecutionCommand(input));
             query.status = response.QueryExecution?.Status?.State;
 
             switch (query.status) {
                 case 'SUCCEEDED':
-                    query.s3Location =
-                        response?.QueryExecution?.ResultConfiguration?.OutputLocation;
+                    query.s3Location = response?.QueryExecution?.ResultConfiguration?.OutputLocation;
 
                     return;
                 case 'QUEUED':
@@ -432,9 +393,7 @@ export class AthenaNodeClient {
                 case 'FAILED':
                     throw new AthenaClientException('Query failed');
                 default:
-                    throw new AthenaClientException(
-                        `Query Status '${query.status}' not supported`,
-                    );
+                    throw new AthenaClientException(`Query Status '${query.status}' not supported`);
             }
         }
     }

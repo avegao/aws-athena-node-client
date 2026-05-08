@@ -48,10 +48,10 @@ and `--expose-gc` manually.
 
 ```ts
 const athenaNodeClient = new AthenaNodeClient({
-  bucketUri: "s3://athena-query-results-eu-west-1/",
-  database: "default",
-  waitTime: 0.5,
-  workGroup: "my-work-group",
+    bucketUri: 's3://athena-query-results-eu-west-1/',
+    database: 'default',
+    waitTime: 0.5,
+    workGroup: 'my-work-group',
 });
 ```
 
@@ -61,10 +61,10 @@ const athenaNodeClient = new AthenaNodeClient({
 const query = `SELECT 1`;
 
 try {
-  const results = await athenaNodeClient.executeQuery<T>(query);
-  console.log(results);
+    const results = await athenaNodeClient.executeQuery<T>(query);
+    console.log(results);
 } catch (error) {
-  console.error(error);
+    console.error(error);
 }
 ```
 
@@ -76,15 +76,15 @@ full `results` array in memory.
 ```ts
 const query = `SELECT id, name FROM users`;
 
-const { id, rows, statistics } = await athenaNodeClient.executeQueryStream<{
-  id: number;
-  name: string;
+const {id, rows, statistics} = await athenaNodeClient.executeQueryStream<{
+    id: number;
+    name: string;
 }>(query, {
-  stats: true,
+    stats: true,
 });
 
 for await (const row of rows) {
-  console.log(id, row.name);
+    console.log(id, row.name);
 }
 
 console.log(statistics);
@@ -97,7 +97,7 @@ provide this query configuration, Athena doesn't use this cache.
 
 ```ts
 const results = await athenaNodeClient.executeQuery<T>(query, {
-  cacheInMinutes: 60,
+    cacheInMinutes: 60,
 });
 ```
 
@@ -109,14 +109,13 @@ Injection attacks. You can visit https://github.com/vitaly-t/pg-promise?tab=read
 info.
 
 ```ts
-const query =
-  "SELECT name, surname, age FROM users WHERE name = $(name) AND surname = $(surname)";
+const query = 'SELECT name, surname, age FROM users WHERE name = $(name) AND surname = $(surname)';
 
 const results = await athenaNodeClient.executeQuery<T>(query, {
-  parameters: {
-    name: "John",
-    surname: "Doe",
-  },
+    parameters: {
+        name: 'John',
+        surname: 'Doe',
+    },
 });
 ```
 
@@ -132,10 +131,10 @@ pnpm add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
 const query = `SELECT 1`;
 
 try {
-  const results = await athenaNodeClient.executeQueryAndGetS3Url(query);
-  console.log(results); // Print s3://S3_BUCKET_NAME/QUERY_ID.csv
+    const results = await athenaNodeClient.executeQueryAndGetS3Url(query);
+    console.log(results); // Print s3://S3_BUCKET_NAME/QUERY_ID.csv
 } catch (error) {
-  console.error(error);
+    console.error(error);
 }
 ```
 
@@ -145,15 +144,15 @@ try {
 const query = `SELECT 1`;
 
 try {
-  const results = await athenaNodeClient.executeQuery<T>(query, {
-    parameters,
-    id: "hdaiuh33r8uyjdkas",
-  });
-  console.log(results);
+    const results = await athenaNodeClient.executeQuery<T>(query, {
+        parameters,
+        id: 'hdaiuh33r8uyjdkas',
+    });
+    console.log(results);
 } catch (error) {
-  if (!(error instanceof QueryCanceledException)) {
-    console.error(error);
-  }
+    if (!(error instanceof QueryCanceledException)) {
+        console.error(error);
+    }
 }
 ```
 
@@ -161,9 +160,9 @@ You must run this code in a distinct thread than the query execution thread.
 
 ```ts
 try {
-  await athenaNodeClient.cancelQuery("hdaiuh33r8uyjdkas");
+    await athenaNodeClient.cancelQuery('hdaiuh33r8uyjdkas');
 } catch (error) {
-  console.error(error);
+    console.error(error);
 }
 ```
 
@@ -182,31 +181,31 @@ Before
 
 ```ts
 const athenaClient = new AthenaClient({
-  awsConfig: {
-    accessKeyId: "DASCDAS82941",
-    apiVersion: "2017-05-18",
-    region: "eu-west-1",
-    secretAccessKey: "CJDADDHDASIUOHADS/3123DASE12",
-  },
-  bucketUri: "s3://athena-query-results-eu-west-1/",
-  database: "default",
-  waitTime: 0.5,
-  workGroup: "my-work-group",
+    awsConfig: {
+        accessKeyId: 'DASCDAS82941',
+        apiVersion: '2017-05-18',
+        region: 'eu-west-1',
+        secretAccessKey: 'CJDADDHDASIUOHADS/3123DASE12',
+    },
+    bucketUri: 's3://athena-query-results-eu-west-1/',
+    database: 'default',
+    waitTime: 0.5,
+    workGroup: 'my-work-group',
 });
 ```
 
 After
 
 ```ts
-import { AthenaClient } from "@aws-sdk/client-athena";
+import {AthenaClient} from '@aws-sdk/client-athena';
 
 const athena = new AthenaClient({});
 
 const athenaNodeClient = new AthenaNodeClient(athena, {
-  bucketUri: "s3://athena-query-results-eu-west-1/",
-  database: "default",
-  waitTime: 0.5,
-  workGroup: "my-work-group",
+    bucketUri: 's3://athena-query-results-eu-west-1/',
+    database: 'default',
+    waitTime: 0.5,
+    workGroup: 'my-work-group',
 });
 ```
 
@@ -221,36 +220,36 @@ Before
 
 ```ts
 const athenaClient = new AthenaClient({
-  awsConfig: {
-    accessKeyId: "DASCDAS82941",
-    apiVersion: "2017-05-18",
-    region: "eu-west-1",
-    secretAccessKey: "CJDADDHDASIUOHADS/3123DASE12",
-  },
-  bucketUri: "s3://athena-query-results-eu-west-1/",
-  database: "default",
-  waitTime: 0.5,
-  workGroup: "my-work-group",
+    awsConfig: {
+        accessKeyId: 'DASCDAS82941',
+        apiVersion: '2017-05-18',
+        region: 'eu-west-1',
+        secretAccessKey: 'CJDADDHDASIUOHADS/3123DASE12',
+    },
+    bucketUri: 's3://athena-query-results-eu-west-1/',
+    database: 'default',
+    waitTime: 0.5,
+    workGroup: 'my-work-group',
 });
 ```
 
 After
 
 ```ts
-import { AthenaClient } from "@aws-sdk/client-athena";
-import { S3 } from "@aws-sdk/client-s3";
+import {AthenaClient} from '@aws-sdk/client-athena';
+import {S3} from '@aws-sdk/client-s3';
 
 const athena = new AthenaClient({});
 const s3 = new S3({
-  useDualstackEndpoint: true, // recommended to support IPv6
+    useDualstackEndpoint: true, // recommended to support IPv6
 });
 
 const athenaNodeClient = new AthenaNodeClient(athena, {
-  bucketUri: "s3://athena-query-results-eu-west-1/",
-  database: "default",
-  waitTime: 0.5,
-  workGroup: "my-work-group",
-  s3Client: s3,
+    bucketUri: 's3://athena-query-results-eu-west-1/',
+    database: 'default',
+    waitTime: 0.5,
+    workGroup: 'my-work-group',
+    s3Client: s3,
 });
 ```
 
@@ -271,12 +270,12 @@ After
 
 ```ts
 const results = await athenaNodeClient.executeQuery<T>(query, {
-  parameters: {
-    name: "John",
-    surname: "Doe",
-  },
-  id: "abcd",
-  cacheInMinutes: 60,
+    parameters: {
+        name: 'John',
+        surname: 'Doe',
+    },
+    id: 'abcd',
+    cacheInMinutes: 60,
 });
 ```
 
@@ -296,12 +295,12 @@ const results = await athenaNodeClient.executeQuery<T>(query);
 
 ```json
 [
-  {
-    "result": "1"
-  },
-  {
-    "result": "2"
-  }
+    {
+        "result": "1"
+    },
+    {
+        "result": "2"
+    }
 ]
 ```
 
@@ -311,11 +310,11 @@ After
 
 ```ts
 const result = await athenaNodeClient.executeQuery<T>(query, {
-  stats: false,
+    stats: false,
 });
 // OR
-const { results, statistics } = await athenaNodeClient.executeQuery<T>(query, {
-  stats: true,
+const {results, statistics} = await athenaNodeClient.executeQuery<T>(query, {
+    stats: true,
 });
 ```
 
@@ -323,15 +322,15 @@ const { results, statistics } = await athenaNodeClient.executeQuery<T>(query, {
 
 ```json
 {
-  "id": "id",
-  "results": [
-    {
-      "result": "1"
-    },
-    {
-      "result": "2"
-    }
-  ]
+    "id": "id",
+    "results": [
+        {
+            "result": "1"
+        },
+        {
+            "result": "2"
+        }
+    ]
 }
 ```
 
@@ -339,19 +338,19 @@ const { results, statistics } = await athenaNodeClient.executeQuery<T>(query, {
 
 ```json
 {
-  "id": "id",
-  "results": [
-    {
-      "result": "1"
-    },
-    {
-      "result": "2"
+    "id": "id",
+    "results": [
+        {
+            "result": "1"
+        },
+        {
+            "result": "2"
+        }
+    ],
+    "statistics": {
+        "dataScannedInBytes": 26376236,
+        "executionTimeInSeconds": 2.703
     }
-  ],
-  "statistics": {
-    "dataScannedInBytes": 26376236,
-    "executionTimeInSeconds": 2.703
-  }
 }
 ```
 
@@ -360,17 +359,15 @@ const { results, statistics } = await athenaNodeClient.executeQuery<T>(query, {
 Before
 
 ```ts
-const { bucket, key } = await athenaNodeClient.executeQueryAndGetS3Key<T>(
-  query
-);
+const {bucket, key} = await athenaNodeClient.executeQueryAndGetS3Key<T>(query);
 ```
 
 - V2 Response example:
 
 ```json
 {
-  "bucket": "bucket-test",
-  "key": "123-key.csv"
+    "bucket": "bucket-test",
+    "key": "123-key.csv"
 }
 ```
 
@@ -379,19 +376,18 @@ After
 If the statistics parameter is true, the method returns an object with bucket, key and statistics, otherwise it will return an object with bucket and key.
 
 ```ts
-const { bucket, key, statistics } =
-  await athenaNodeClient.executeQueryAndGetS3Key<T>(query, {
+const {bucket, key, statistics} = await athenaNodeClient.executeQueryAndGetS3Key<T>(query, {
     stats: true | false,
-  });
+});
 ```
 
 - V3 response example with stats false or without stats param:
 
 ```json
 {
-  "id": "id",
-  "bucket": "bucket-test",
-  "key": "123-key.csv"
+    "id": "id",
+    "bucket": "bucket-test",
+    "key": "123-key.csv"
 }
 ```
 
@@ -399,13 +395,13 @@ const { bucket, key, statistics } =
 
 ```json
 {
-  "id": "id",
-  "bucket": "bucket-test",
-  "key": "123-key.csv",
-  "statistics": {
-    "dataScannedInBytes": 26376236,
-    "executionTimeInSeconds": 2.703
-  }
+    "id": "id",
+    "bucket": "bucket-test",
+    "key": "123-key.csv",
+    "statistics": {
+        "dataScannedInBytes": 26376236,
+        "executionTimeInSeconds": 2.703
+    }
 }
 ```
 
@@ -414,9 +410,7 @@ const { bucket, key, statistics } =
 Before
 
 ```ts
-const url = await athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>(
-  query
-);
+const url = await athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>(query);
 ```
 
 - V2 response example:
@@ -430,18 +424,17 @@ After
 If the statistics parameter is true, the method returns an object with url and statistics, otherwise it will return an object with url.
 
 ```ts
-const { url, statistics } =
-  await athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>(query, {
+const {url, statistics} = await athenaNodeClient.executeQueryAndGetDownloadSignedUrl<T>(query, {
     stats: true | false,
-  });
+});
 ```
 
 - V3 response example with stats false or without stats param:
 
 ```json
 {
-  "id": "id",
-  "url": "https://bucket-test..."
+    "id": "id",
+    "url": "https://bucket-test..."
 }
 ```
 
@@ -449,11 +442,11 @@ const { url, statistics } =
 
 ```json
 {
-  "id": "id",
-  "url": "https://bucket-test...",
-  "statistics": {
-    "dataScannedInBytes": 26376236,
-    "executionTimeInSeconds": 2.362
-  }
+    "id": "id",
+    "url": "https://bucket-test...",
+    "statistics": {
+        "dataScannedInBytes": 26376236,
+        "executionTimeInSeconds": 2.362
+    }
 }
 ```

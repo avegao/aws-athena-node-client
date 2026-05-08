@@ -1,5 +1,6 @@
-import { Query } from './Query.js';
-import { isEmpty } from 'lodash-es';
+import {isEmpty} from 'es-toolkit/compat';
+
+import type {Query} from './Query.js';
 
 export class Queue {
     public queries: Query<unknown>[] = [];

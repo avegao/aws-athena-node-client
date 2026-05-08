@@ -1,9 +1,7 @@
-import { describe, expect, test } from 'vitest';
-import { ResultObjectParser } from '../src/ResultParser.js';
-import {
-    createRepresentativeResultSet,
-    createResultSetFixture,
-} from './helpers/athenaResultSet.js';
+import {describe, expect, test} from 'vitest';
+
+import {ResultObjectParser} from '../src/ResultParser.js';
+import {createRepresentativeResultSet, createResultSetFixture} from './helpers/athenaResultSet.js';
 
 describe('ResultObjectParser', () => {
     test('parses mixed Athena rows into typed objects', () => {
@@ -58,7 +56,7 @@ describe('ResultObjectParser', () => {
                 active: true,
                 createdAt: new Date('2026-05-07T10:30:00.000Z'),
                 tags: [1, 2, 3],
-                metadata: { role: 'admin' },
+                metadata: {role: 'admin'},
                 nickname: null,
             },
         ]);
@@ -102,8 +100,8 @@ describe('ResultObjectParser', () => {
         parser.appendRows(results, secondPage.Rows ?? [], false);
 
         expect(results).toEqual([
-            { id: 1, name: 'Alice' },
-            { id: 2, name: 'Bob' },
+            {id: 1, name: 'Alice'},
+            {id: 2, name: 'Bob'},
         ]);
     });
 
@@ -125,8 +123,8 @@ describe('ResultObjectParser', () => {
         const parser = new ResultObjectParser(resultSet);
 
         expect(Array.from(parser.iterateRows(resultSet.Rows ?? [], true))).toEqual([
-            { id: 1, name: 'Alice' },
-            { id: 2, name: 'Bob' },
+            {id: 1, name: 'Alice'},
+            {id: 2, name: 'Bob'},
         ]);
     });
 

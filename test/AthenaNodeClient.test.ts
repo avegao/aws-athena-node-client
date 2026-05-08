@@ -4,15 +4,13 @@ import {
     StartQueryExecutionCommand,
     type AthenaClient as AwsAthenaClient,
 } from '@aws-sdk/client-athena';
-import { describe, expect, test, vi } from 'vitest';
-import { AthenaNodeClient } from '../src/index.js';
-import { createResultSetFixture } from './helpers/athenaResultSet.js';
+import {describe, expect, test, vi} from 'vitest';
+
+import {AthenaNodeClient} from '../src/index.js';
+import {createResultSetFixture} from './helpers/athenaResultSet.js';
 
 function getQueueSize(client: AthenaNodeClient): number {
-    return (
-        (client as unknown as { _queue: { queries: unknown[] } })._queue.queries
-            .length
-    );
+    return (client as unknown as {_queue: {queries: unknown[]}})._queue.queries.length;
 }
 
 describe('AthenaNodeClient', () => {
@@ -59,7 +57,7 @@ describe('AthenaNodeClient', () => {
 
         const send = vi.fn(async (command: unknown) => {
             if (command instanceof StartQueryExecutionCommand) {
-                return { QueryExecutionId: 'athena-query-1' };
+                return {QueryExecutionId: 'athena-query-1'};
             }
 
             if (command instanceof GetQueryExecutionCommand) {
@@ -88,7 +86,7 @@ describe('AthenaNodeClient', () => {
 
             throw new Error(`Unexpected command: ${String(command)}`);
         });
-        const client = { send } as unknown as AwsAthenaClient;
+        const client = {send} as unknown as AwsAthenaClient;
         const athenaNodeClient = new AthenaNodeClient(client, {
             bucketUri: 's3://athena-results/',
             database: 'default',
@@ -104,8 +102,8 @@ describe('AthenaNodeClient', () => {
         expect(response).toEqual({
             id: 'athena-query-1',
             results: [
-                { id: 1, name: 'Alice', active: true },
-                { id: 2, name: 'Bob', active: false },
+                {id: 1, name: 'Alice', active: true},
+                {id: 2, name: 'Bob', active: false},
             ],
         });
         expect(send).toHaveBeenCalledTimes(4);
@@ -155,7 +153,7 @@ describe('AthenaNodeClient', () => {
 
         const send = vi.fn(async (command: unknown) => {
             if (command instanceof StartQueryExecutionCommand) {
-                return { QueryExecutionId: 'athena-query-2' };
+                return {QueryExecutionId: 'athena-query-2'};
             }
 
             if (command instanceof GetQueryExecutionCommand) {
@@ -188,7 +186,7 @@ describe('AthenaNodeClient', () => {
 
             throw new Error(`Unexpected command: ${String(command)}`);
         });
-        const client = { send } as unknown as AwsAthenaClient;
+        const client = {send} as unknown as AwsAthenaClient;
         const athenaNodeClient = new AthenaNodeClient(client, {
             bucketUri: 's3://athena-results/',
             database: 'default',
@@ -202,7 +200,7 @@ describe('AthenaNodeClient', () => {
         }>('SELECT 1', {
             stats: true,
         });
-        const rows: Array<{ id: number; name: string; active: boolean }> = [];
+        const rows: Array<{id: number; name: string; active: boolean}> = [];
 
         for await (const row of response.rows) {
             rows.push(row);
@@ -214,8 +212,8 @@ describe('AthenaNodeClient', () => {
             executionTimeInSeconds: 0.25,
         });
         expect(rows).toEqual([
-            { id: 1, name: 'Alice', active: true },
-            { id: 2, name: 'Bob', active: false },
+            {id: 1, name: 'Alice', active: true},
+            {id: 2, name: 'Bob', active: false},
         ]);
         expect(send).toHaveBeenCalledTimes(5);
         expect(getQueueSize(athenaNodeClient)).toBe(0);

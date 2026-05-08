@@ -78,14 +78,14 @@ export class Column {
      * @returns {any[]} - parsed array
      */
     public static parseArray(arrayInString: string): number[] | string[] {
-        const normalizedArray = arrayInString.replace(/[\[\]]/g, '');
+        const normalizedArray = arrayInString.replace(/[[\]]/g, '');
 
         if (normalizedArray === '') {
             return [];
         }
 
         const values = normalizedArray.split(', ');
-        const result = new Array<number | string>(values.length);
+        const result = Array<number | string>(values.length);
 
         for (let index = 0; index < values.length; index++) {
             const value = values[index] as string;

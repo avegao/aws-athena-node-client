@@ -1,10 +1,8 @@
-import { defineConfig } from 'vitest/config';
+import {defineConfig} from 'vitest/config';
 
 export default defineConfig({
     test: {
         include: ['test/**/*.perf.ts'],
-        reporters: process.env.GITHUB_ACTIONS
-            ? ['dot', 'github-actions']
-            : ['dot'],
+        reporters: process.env.GITHUB_ACTIONS ? ['dot', 'github-actions'] : ['dot'],
     },
 });

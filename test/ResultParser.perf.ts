@@ -1,8 +1,9 @@
-import { type Row } from '@aws-sdk/client-athena';
-import { expect, test } from 'vitest';
-import { Column } from '../src/Column.js';
-import { ResultObjectParser } from '../src/ResultParser.js';
-import { createRepresentativeResultSet } from './helpers/athenaResultSet.js';
+import {type Row} from '@aws-sdk/client-athena';
+import {expect, test} from 'vitest';
+
+import type {Column} from '../src/Column.js';
+import {ResultObjectParser} from '../src/ResultParser.js';
+import {createRepresentativeResultSet} from './helpers/athenaResultSet.js';
 
 interface BenchmarkSample {
     readonly durationMs: number;
@@ -16,14 +17,8 @@ function calculateAverage(values: readonly number[]): number {
     return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
-function calculatePercentile(
-    sortedValues: readonly number[],
-    percentile: number,
-): number {
-    const index = Math.min(
-        sortedValues.length - 1,
-        Math.max(0, Math.ceil(sortedValues.length * percentile) - 1),
-    );
+function calculatePercentile(sortedValues: readonly number[], percentile: number): number {
+    const index = Math.min(sortedValues.length - 1, Math.max(0, Math.ceil(sortedValues.length * percentile) - 1));
 
     return sortedValues[index] as number;
 }
@@ -33,7 +28,7 @@ function getHeapUsedInMb(): number {
 }
 
 function runGarbageCollection(): void {
-    (globalThis as { gc?: () => void }).gc?.();
+    (globalThis as {gc?: () => void}).gc?.();
 }
 
 function legacyParseRow<T extends object>(row: Row, columns: Column[]): T {
@@ -56,25 +51,17 @@ function legacyParseRow<T extends object>(row: Row, columns: Column[]): T {
     return result;
 }
 
-function legacyParseRows<T extends object>(
-    rows: Row[],
-    columns: Column[],
-    isFirstPage = false,
-): T[] {
+function legacyParseRows<T extends object>(rows: Row[], columns: Column[], isFirstPage = false): T[] {
     const results: T[] = [];
 
-    for (
-        let rowIndex = isFirstPage ? 1 : 0, rowCount = rows.length;
-        rowIndex < rowCount;
-        rowIndex++
-    ) {
+    for (let rowIndex = isFirstPage ? 1 : 0, rowCount = rows.length; rowIndex < rowCount; rowIndex++) {
         results.push(legacyParseRow(rows[rowIndex] as Row, columns));
     }
 
     return results;
 }
 
-function runCase<T>(callback: () => T): { readonly result: T } & BenchmarkSample {
+function runCase<T>(callback: () => T): {readonly result: T} & BenchmarkSample {
     runGarbageCollection();
 
     const heapBefore = getHeapUsedInMb();
@@ -98,11 +85,7 @@ test('reports parser timing and heap cost for representative Athena results', ()
     const parser = new ResultObjectParser(resultSet);
     const rows = resultSet.Rows ?? [];
     const warmupResults: Array<Record<string, unknown>> = [];
-    const warmupLegacyResults = legacyParseRows<Record<string, unknown>>(
-        rows,
-        parser.columns,
-        true,
-    );
+    const warmupLegacyResults = legacyParseRows<Record<string, unknown>>(rows, parser.columns, true);
     let warmupStreamCount = 0;
 
     parser.appendRows(warmupResults, rows, true);
@@ -118,9 +101,7 @@ test('reports parser timing and heap cost for representative Athena results', ()
     const streamingSamples: BenchmarkSample[] = [];
 
     for (let iteration = 0; iteration < iterations; iteration++) {
-        const legacyRun = runCase(() =>
-            legacyParseRows<Record<string, unknown>>(rows, parser.columns, true),
-        );
+        const legacyRun = runCase(() => legacyParseRows<Record<string, unknown>>(rows, parser.columns, true));
         const optimizedRun = runCase(() => {
             const parsedRows: Array<Record<string, unknown>> = [];
 
@@ -147,21 +128,13 @@ test('reports parser timing and heap cost for representative Athena results', ()
         streamingSamples.push(streamingRun);
     }
 
-    const optimizedDurations = optimizedSamples
-        .map((sample) => sample.durationMs)
-        .sort((left, right) => left - right);
+    const optimizedDurations = optimizedSamples.map((sample) => sample.durationMs).sort((left, right) => left - right);
     const optimizedHeapDeltas = optimizedSamples
         .map((sample) => sample.heapDeltaMb)
         .sort((left, right) => left - right);
-    const legacyDurations = legacySamples
-        .map((sample) => sample.durationMs)
-        .sort((left, right) => left - right);
-    const legacyHeapDeltas = legacySamples
-        .map((sample) => sample.heapDeltaMb)
-        .sort((left, right) => left - right);
-    const streamingDurations = streamingSamples
-        .map((sample) => sample.durationMs)
-        .sort((left, right) => left - right);
+    const legacyDurations = legacySamples.map((sample) => sample.durationMs).sort((left, right) => left - right);
+    const legacyHeapDeltas = legacySamples.map((sample) => sample.heapDeltaMb).sort((left, right) => left - right);
+    const streamingDurations = streamingSamples.map((sample) => sample.durationMs).sort((left, right) => left - right);
     const streamingHeapDeltas = streamingSamples
         .map((sample) => sample.heapDeltaMb)
         .sort((left, right) => left - right);
@@ -171,15 +144,9 @@ test('reports parser timing and heap cost for representative Athena results', ()
     const averageLegacyHeap = calculateAverage(legacyHeapDeltas);
     const averageOptimizedHeap = calculateAverage(optimizedHeapDeltas);
     const averageStreamingHeap = calculateAverage(streamingHeapDeltas);
-    const durationReduction =
-        ((averageLegacyDuration - averageOptimizedDuration) /
-            averageLegacyDuration) *
-        100;
-    const heapReduction =
-        ((averageLegacyHeap - averageOptimizedHeap) / averageLegacyHeap) * 100;
-    const streamingHeapReduction =
-        ((averageOptimizedHeap - averageStreamingHeap) / averageOptimizedHeap) *
-        100;
+    const durationReduction = ((averageLegacyDuration - averageOptimizedDuration) / averageLegacyDuration) * 100;
+    const heapReduction = ((averageLegacyHeap - averageOptimizedHeap) / averageLegacyHeap) * 100;
+    const streamingHeapReduction = ((averageOptimizedHeap - averageStreamingHeap) / averageOptimizedHeap) * 100;
 
     console.info(
         [

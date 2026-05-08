@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest';
-import { Column } from '../src/Column.js';
+import {describe, expect, test} from 'vitest';
+
+import {Column} from '../src/Column.js';
 
 describe('Column', () => {
     test('parseNumber parses valid numbers', () => {
@@ -8,9 +9,7 @@ describe('Column', () => {
     });
 
     test('parseNumber throws for invalid numbers', () => {
-        expect(() => Column.parseNumber('foo')).toThrowError(
-            "The value 'foo 'is not a number",
-        );
+        expect(() => Column.parseNumber('foo')).toThrowError("The value 'foo 'is not a number");
     });
 
     test('parseBoolean handles Athena truthy and falsy values', () => {

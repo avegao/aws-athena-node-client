@@ -1,4 +1,4 @@
-import { type ResultSet, type Row } from '@aws-sdk/client-athena';
+import {type ResultSet, type Row} from '@aws-sdk/client-athena';
 
 export interface ResultSetColumnFixture {
     readonly name: string;
@@ -13,37 +13,33 @@ export interface ResultSetFixtureOptions {
     readonly includeHeaderRow?: boolean;
 }
 
-export function createResultSetFixture(
-    options: ResultSetFixtureOptions,
-): ResultSet {
-    const { columns, rowCount: explicitRowCount, includeHeaderRow = true } =
-        options;
+export function createResultSetFixture(options: ResultSetFixtureOptions): ResultSet {
+    const {columns, rowCount: explicitRowCount, includeHeaderRow = true} = options;
     const rowCount = explicitRowCount ?? columns[0]?.values?.length ?? 0;
     const rows: Row[] = [];
 
     if (includeHeaderRow) {
         rows.push({
-            Data: columns.map(({ name }) => ({ VarCharValue: name })),
+            Data: columns.map(({name}) => ({VarCharValue: name})),
         });
     }
 
     for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-        const data = new Array(columns.length);
+        const data = Array(columns.length);
 
         for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
             const column = columns[columnIndex] as ResultSetColumnFixture;
-            const value =
-                column.values?.[rowIndex] ?? column.valueFactory?.(rowIndex) ?? null;
+            const value = column.values?.[rowIndex] ?? column.valueFactory?.(rowIndex) ?? null;
 
-            data[columnIndex] = value == null ? {} : { VarCharValue: value };
+            data[columnIndex] = value == null ? {} : {VarCharValue: value};
         }
 
-        rows.push({ Data: data });
+        rows.push({Data: data});
     }
 
     return {
         ResultSetMetadata: {
-            ColumnInfo: columns.map(({ name, type }) => ({
+            ColumnInfo: columns.map(({name, type}) => ({
                 Name: name,
                 Type: type,
             })),
@@ -84,20 +80,17 @@ export function createRepresentativeResultSet(rowCount = 7000): ResultSet {
             {
                 name: 'createdAt',
                 type: 'timestamp',
-                valueFactory: (rowIndex) =>
-                    `2026-05-${String((rowIndex % 28) + 1).padStart(2, '0')}T12:34:56.000Z`,
+                valueFactory: (rowIndex) => `2026-05-${String((rowIndex % 28) + 1).padStart(2, '0')}T12:34:56.000Z`,
             },
             {
                 name: 'tags',
                 type: 'array',
-                valueFactory: (rowIndex) =>
-                    `[${rowIndex % 3}, ${(rowIndex + 1) % 5}, ${(rowIndex + 2) % 7}]`,
+                valueFactory: (rowIndex) => `[${rowIndex % 3}, ${(rowIndex + 1) % 5}, ${(rowIndex + 2) % 7}]`,
             },
             {
                 name: 'metadata',
                 type: 'json',
-                valueFactory: (rowIndex) =>
-                    `{"bucket":${rowIndex % 10},"enabled":${rowIndex % 2 === 0}}`,
+                valueFactory: (rowIndex) => `{"bucket":${rowIndex % 10},"enabled":${rowIndex % 2 === 0}}`,
             },
             {
                 name: 'name',
@@ -107,8 +100,7 @@ export function createRepresentativeResultSet(rowCount = 7000): ResultSet {
             {
                 name: 'segment',
                 type: 'string',
-                valueFactory: (rowIndex) =>
-                    rowIndex % 3 === 0 ? 'enterprise' : 'standard',
+                valueFactory: (rowIndex) => (rowIndex % 3 === 0 ? 'enterprise' : 'standard'),
             },
         ],
     });
