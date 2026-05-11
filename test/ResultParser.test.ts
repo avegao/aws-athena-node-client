@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test} from 'vite-plus/test';
 
 import {ResultObjectParser} from '../src/ResultParser.js';
 import {createRepresentativeResultSet, createResultSetFixture} from './helpers/athenaResultSet.js';

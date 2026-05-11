@@ -1,9 +1,0 @@
-{
-    "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx}": [
-        "oxfmt --write --no-error-on-unmatched-pattern",
-        "oxlint --fix --import-plugin"
-    ],
-    "*.{json,jsonc,md,mdx,html,css,less,scss,vue,graphql,gql,mjml,toml,yml,yaml}": [
-        "oxfmt --write --no-error-on-unmatched-pattern"
-    ]
-}

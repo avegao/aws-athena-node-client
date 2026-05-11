@@ -1,4 +1,4 @@
-import {describe, expect, test} from 'vitest';
+import {describe, expect, test} from 'vite-plus/test';
 
 import {Column} from '../src/Column.js';
 import {Query} from '../src/Query.js';

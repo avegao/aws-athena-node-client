@@ -48,12 +48,28 @@ export class AthenaNodeClient {
 
     private readonly _queue: Queue;
 
+    /**
+     * Creates a client that runs queries through an existing AWS Athena SDK client.
+     *
+     * @param client AWS Athena SDK client used to send requests.
+     * @param config Client configuration with the query output bucket, database, and polling interval.
+     */
     public constructor(client: AwsAthenaClient, config: AthenaClientConfig) {
         this._client = client;
         this._config = config;
         this._queue = new Queue();
     }
 
+    /**
+     * Executes a query and materializes all parsed rows in memory.
+     *
+     * Use this method when the result set is small or when you need random access to the full array.
+     *
+     * @template T Row shape returned by the query.
+     * @param sql SQL statement to run in Athena.
+     * @param config Optional query configuration with parameters, cache age, query id, and statistics.
+     * @returns The Athena execution id, parsed rows, and optional execution statistics.
+     */
     public async executeQuery<T extends object>(
         sql: string,
         config?: QueryConfig,
@@ -80,7 +96,15 @@ export class AthenaNodeClient {
     }
 
     /**
-     * Execute query in Athena and iterate parsed rows without materializing the full result array.
+     * Executes a query and exposes the parsed rows as an async generator.
+     *
+     * Use this method for large result sets or streaming pipelines where holding the full
+     * response in memory would be inefficient.
+     *
+     * @template T Row shape returned by the query.
+     * @param sql SQL statement to run in Athena.
+     * @param config Optional query configuration with parameters, cache age, query id, and statistics.
+     * @returns The Athena execution id, a row generator, and optional execution statistics.
      */
     public async executeQueryStream<T extends object>(sql: string, config?: QueryConfig): Promise<QueryStream<T>> {
         const query = await this.executeQueryCommon<T>(sql, config);
@@ -100,7 +124,11 @@ export class AthenaNodeClient {
     }
 
     /**
-     * Execute query in Athena and get S3 URL with CSV file
+     * Executes a query and returns the S3 bucket and key where Athena stored the CSV file.
+     *
+     * @param sql SQL statement to run in Athena.
+     * @param config Optional query configuration with parameters, cache age, query id, and statistics.
+     * @returns The Athena execution id, the output bucket, the object key, and optional statistics.
      */
     public async executeQueryAndGetS3Key(
         sql: string,
@@ -134,6 +162,15 @@ export class AthenaNodeClient {
         return response;
     }
 
+    /**
+     * Executes a query and returns a presigned download URL for the generated CSV file.
+     *
+     * This method requires an S3 client to be configured in the client config.
+     *
+     * @param sql SQL statement to run in Athena.
+     * @param config Optional query configuration with parameters, cache age, query id, statistics, and URL expiry.
+     * @returns The Athena execution id, the presigned URL, and optional statistics.
+     */
     public async executeQueryAndGetDownloadSignedUrl(
         sql: string,
         config?: QueryWithResultsInS3Config,
@@ -169,13 +206,9 @@ export class AthenaNodeClient {
     }
 
     /**
-     * Cancel a AWS Athena query
+     * Cancels an in-flight Athena query by execution id.
      *
-     * @param {string} id Execution query ID
-     *
-     * @returns {Promise<void>}
-     *
-     * @memberof AthenaNodeClient
+     * @param id Athena query execution id to stop.
      */
     public async cancelQuery(id: string): Promise<void> {
         const query = this._queue.getQueryById(id);
@@ -254,6 +287,7 @@ export class AthenaNodeClient {
      * @template T
      *
      * @param {Query<T>} query
+     * @param {string} nextToken
      *
      * @returns {Promise<T[]>} - parsed query result rows
      * @memberof AthenaNodeClient

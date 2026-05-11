@@ -4,7 +4,7 @@ import {
     StartQueryExecutionCommand,
     type AthenaClient as AwsAthenaClient,
 } from '@aws-sdk/client-athena';
-import {describe, expect, test, vi} from 'vitest';
+import {describe, expect, test, vi} from 'vite-plus/test';
 
 import {AthenaNodeClient} from '../src/index.js';
 import {createResultSetFixture} from './helpers/athenaResultSet.js';

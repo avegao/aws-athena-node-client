@@ -8,18 +8,17 @@ Use [README.md](README.md) for installation, usage examples, and upgrade history
 
 ## Working Commands
 
-- Install dependencies: `pnpm install`
-- Build the library: `pnpm build`
-- Watch the build: `pnpm dev`
-- Run tests: `pnpm test`
-- Run coverage: `pnpm coverage`
-- Run the parser benchmark: `pnpm benchmark:parse`
-- Format and lint with Biome write mode: `pnpm check`
-- Format with `oxfmt` and fix lint issues with `oxlint`: `pnpm format`
-- Check formatting without writes: `pnpm format:check`
-- Run lint without writes: `pnpm lint`
+- Install dependencies: `vp install`
+- Build the library package: `vp pack`
+- Watch the library package build: `vp pack --watch`
+- Run tests: `vp test`
+- Run coverage: `vp test run --coverage`
+- Run validation checks: `vp check`
+- Format code: `vp fmt --write .`
+- Check formatting without writes: `vp fmt --check .`
+- Run lint without writes: `vp lint`
 
-`pnpm check` and `pnpm format` are both write-mode commands.
+`vp check` is the preferred validation loop in this repository.
 
 ## Code Style
 
@@ -39,14 +38,14 @@ Use [README.md](README.md) for installation, usage examples, and upgrade history
 - `Queue` stores active queries and resolves them by query id; keep its id fallback behavior intact.
 - `ResultObjectParser` owns row parsing and pagination-friendly iteration; prefer extending it instead of duplicating parsing loops in the client.
 - `Column` contains the per-type Athena value parsers used by `ResultObjectParser`; add new type support there first.
-- The build outputs both ESM and CJS bundles via [rslib.config.ts](rslib.config.ts).
+- The build outputs both ESM and CJS bundles via the `pack` block in [vite.config.ts](vite.config.ts).
 
 ## Testing
 
 - Unit tests live in [test/](test/).
 - Use Vitest conventions already present in [test/Query.test.ts](test/Query.test.ts) and [test/Queue.test.ts](test/Queue.test.ts).
 - Parser behavior and streaming behavior are covered in [test/ResultParser.test.ts](test/ResultParser.test.ts) and [test/AthenaNodeClient.test.ts](test/AthenaNodeClient.test.ts).
-- Performance benchmarking for parser changes lives in [test/ResultParser.perf.ts](test/ResultParser.perf.ts); use `pnpm benchmark:parse` when touching hot parsing paths.
+- Performance benchmarking for parser changes is no longer tracked here (benchmarks removed).
 - Add or update tests when changing public behavior, query parsing, queue behavior, streaming, or exception handling.
 
 ## Repository-Specific Pitfalls
