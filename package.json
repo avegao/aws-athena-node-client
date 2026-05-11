@@ -1,6 +1,6 @@
 {
     "name": "aws-athena-node-client",
-    "version": "5.0.0.alpha0",
+    "version": "5.0.0-alpha.0",
     "keywords": [
         "amazon web services",
         "athena",

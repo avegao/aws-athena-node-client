@@ -48,6 +48,16 @@ vp pack
 
 ### Create client
 
+`AthenaNodeClient` accepts the following constructor config:
+
+| Property            | Type       | Required | Description                                                                        |
+| ------------------- | ---------- | -------- | ---------------------------------------------------------------------------------- |
+| `database`          | `string`   | Yes      | Athena database used in `QueryExecutionContext`.                                   |
+| `waitTimeInSeconds` | `number`   | Yes      | Polling interval used while waiting for the query to finish.                       |
+| `bucketUri`         | `string`   | No       | S3 output location for Athena query results. Required for S3-based result methods. |
+| `workGroup`         | `string`   | No       | Athena workgroup to run the query in.                                              |
+| `s3Client`          | `S3Client` | No       | Required only for `executeQueryAndGetDownloadSignedUrl`.                           |
+
 ```ts
 import {AthenaClient} from '@aws-sdk/client-athena';
 import {AthenaNodeClient} from 'aws-athena-node-client';
@@ -57,7 +67,7 @@ const athenaClient = new AthenaClient({});
 const athenaNodeClient = new AthenaNodeClient(athenaClient, {
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
-    waitTime: 0.5,
+    waitTimeInSeconds: 0.5,
     workGroup: 'my-work-group',
 });
 ```
@@ -203,7 +213,7 @@ const athenaClient = new AthenaClient({
     },
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
-    waitTime: 0.5,
+    waitTimeInSeconds: 0.5,
     workGroup: 'my-work-group',
 });
 ```
@@ -218,7 +228,7 @@ const athena = new AthenaClient({});
 const athenaNodeClient = new AthenaNodeClient(athena, {
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
-    waitTime: 0.5,
+    waitTimeInSeconds: 0.5,
     workGroup: 'my-work-group',
 });
 ```
@@ -242,7 +252,7 @@ const athenaClient = new AthenaClient({
     },
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
-    waitTime: 0.5,
+    waitTimeInSeconds: 0.5,
     workGroup: 'my-work-group',
 });
 ```
@@ -261,7 +271,7 @@ const s3 = new S3({
 const athenaNodeClient = new AthenaNodeClient(athena, {
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
-    waitTime: 0.5,
+    waitTimeInSeconds: 0.5,
     workGroup: 'my-work-group',
     s3Client: s3,
 });
