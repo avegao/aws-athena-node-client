@@ -1,3 +1,5 @@
+
+
 # AWS Athena Client for NodeJS
 
 Requires Node.js 24 LTS or newer, or Bun 1.1+.
@@ -47,10 +49,14 @@ and `--expose-gc` manually.
 ### Create client
 
 ```ts
-const athenaNodeClient = new AthenaNodeClient({
+import {AthenaClient} from '@aws-sdk/client-athena';
+
+const athena = new AthenaClient({});
+
+const athenaNodeClient = new AthenaNodeClient(athena, {
     bucketUri: 's3://athena-query-results-eu-west-1/',
     database: 'default',
-    waitTime: 0.5,
+    waitTimeInSeconds: 0.5,
     workGroup: 'my-work-group',
 });
 ```
